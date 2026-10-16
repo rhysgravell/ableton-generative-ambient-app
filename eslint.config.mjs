@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored design prototypes (reference only).
+    "design_handoff_buried_landscapes/**",
   ]),
 ]);
 

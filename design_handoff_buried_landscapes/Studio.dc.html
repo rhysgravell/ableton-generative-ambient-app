@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%}body{background:oklch(0.17 0.012 250)}a{color:oklch(0.82 0.075 165)}a:hover{color:oklch(0.9 0.06 165)}@keyframes bl-drift{0%{transform:translateX(-120%)}100%{transform:translateX(330%)}}</style>
+</helmet>
+<div ref="{{ rootRef }}" style="{{ rootStyle }}">
+<sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+<aside style="width:236px;flex:none;display:flex;flex-direction:column;gap:30px;padding:26px 14px 18px;border-right:1px solid var(--line-soft);background:var(--rail);box-sizing:border-box;overflow-y:auto">
+<button onClick="{{ goHome }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;gap:12px;padding:0 10px">
+<span style="display:flex;flex-direction:column;gap:3px"><span style="display:block;width:28px;height:2px;border-radius:2px;background:var(--accent)"></span><span style="display:block;width:20px;height:2px;border-radius:2px;background:var(--accent);opacity:0.55"></span><span style="display:block;width:12px;height:2px;border-radius:2px;background:var(--accent);opacity:0.25"></span></span>
+<span style="font:italic 300 25px/1.02 var(--serif);letter-spacing:-0.01em;color:var(--text)">Buried<br>Landscapes</span>
+</button>
+<nav style="display:flex;flex-direction:column;gap:22px">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="font:500 10.5px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);padding:0 10px 9px">{{ g.label }}</div>
+<sc-for list="{{ g.tools }}" as="t" hint-placeholder-count="2">
+<button onClick="{{ t.select }}" style="{{ t.railStyle }}">
+<span style="{{ t.dotStyle }}"></span>
+<span style="flex:1;text-align:left">{{ t.name }}</span>
+<span style="font:400 10.5px var(--mono);color:var(--text-3)">{{ t.out }}</span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</nav>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;padding:0 4px">
+<div style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:10px;background:var(--sunk);border:1px solid var(--line-soft)">
+<button onClick="{{ setDark }}" style="{{ darkBtnStyle }}">Dark</button>
+<button onClick="{{ setLight }}" style="{{ lightBtnStyle }}">Light</button>
+</div>
+<div style="font:400 10.5px/1.5 var(--mono);color:var(--text-3);padding:0 6px">6 scripts · standard MIDI out</div>
+</div>
+</aside>
+</sc-if>
+<main style="{{ mainStyle }}">
+<sc-if value="{{ isMobile }}">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 18px 14px">
+<span style="font:italic 300 22px/1 var(--serif);color:var(--text)">Buried Landscapes</span>
+<button onClick="{{ toggleTheme }}" style="all:unset;cursor:pointer;font:500 12.5px var(--sans);color:var(--text-2);padding:0 14px;height:36px;display:flex;align-items:center;border:1px solid var(--line-soft);border-radius:999px">{{ themeLabel }}</button>
+</div>
+<sc-if value="{{ showMobileIntro }}">
+<div style="padding:6px 18px 18px;display:flex;flex-direction:column;gap:8px">
+<div style="font:300 30px/1.1 var(--serif);color:var(--text);text-wrap:pretty">Six tools for slow music.</div>
+<div style="font:400 14.5px/1.55 var(--sans);color:var(--text-2);text-wrap:pretty">Every tool starts from defaults — G minor, 80 BPM, 16 bars — so you can run it straight away.</div>
+</div>
+</sc-if>
+<div style="padding:0 18px 4px">
+<button onClick="{{ toggleMenu }}" style="all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 16px;border-radius:14px;background:var(--raised);border:1px solid var(--line)">
+<span style="display:flex;flex-direction:column;gap:5px;flex:1"><span style="font:500 10px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3)">{{ pickerGroup }}</span><span style="font:500 16px/1.1 var(--sans);color:var(--text)">{{ pickerName }}</span></span>
+<span style="font:400 12px var(--mono);color:var(--text-3)">{{ menuGlyph }}</span>
+</button>
+<sc-if value="{{ menuOpen }}">
+<div style="margin-top:8px;border:1px solid var(--line-soft);border-radius:14px;background:var(--rail);padding:12px 8px;display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ groups }}" as="g">
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="font:500 10px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);padding:0 10px 8px">{{ g.label }}</div>
+<sc-for list="{{ g.tools }}" as="t">
+<button onClick="{{ t.select }}" style="{{ t.mobileStyle }}">
+<span style="{{ t.dotStyle }}"></span>
+<span style="flex:1;text-align:left">{{ t.name }}</span>
+<span style="font:400 11px var(--mono);color:var(--text-3)">{{ t.out }}</span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ showWelcome }}">
+<div style="position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:44px;padding:56px 64px;box-sizing:border-box;overflow:hidden">
+<div style="position:absolute;left:0;right:0;bottom:0;height:42%;background-image:repeating-linear-gradient(180deg,transparent 0 15px,var(--line-soft) 15px 16px);-webkit-mask-image:linear-gradient(to bottom,transparent,black);mask-image:linear-gradient(to bottom,transparent,black);opacity:0.8;pointer-events:none"></div>
+<div style="position:relative;display:flex;flex-direction:column;gap:14px;max-width:640px">
+<div style="font:300 54px/1.04 var(--serif);letter-spacing:-0.015em;color:var(--text)">Six tools for <span style="font-style:italic">slow music.</span></div>
+<div style="font:400 16px/1.6 var(--sans);color:var(--text-2);max-width:540px;text-wrap:pretty">Generate new MIDI from a few settings, reshape a file you already have, or look something up. Every tool starts from defaults — G minor, 80 BPM, 16 bars — so you can run it straight away.</div>
+</div>
+<div style="position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 4px"><span style="font:500 10.5px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3)">{{ g.label }}</span><span style="font:400 12px var(--sans);color:var(--text-3)">{{ g.sub }}</span></div>
+<sc-for list="{{ g.tools }}" as="t" hint-placeholder-count="2">
+<button onClick="{{ t.select }}" style="all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:18px 18px 16px;border-radius:14px;border:1px solid var(--line-soft);background:var(--raised);min-height:132px" style-hover="border-color:var(--accent-line)">
+<span style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font:400 22px/1.1 var(--serif);color:var(--text)">{{ t.name }}</span><span style="font:400 11px var(--mono);color:var(--text-3)">{{ t.out }}</span></span>
+<span style="font:400 13.5px/1.5 var(--sans);color:var(--text-2);text-wrap:pretty">{{ t.blurb }}</span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ hasTool }}">
+<header style="{{ headerStyle }}">
+<div style="display:flex;flex-direction:column;gap:8px;min-width:0;max-width:640px">
+<span style="font:500 10.5px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3)">{{ toolGroup }}</span>
+<span style="{{ titleStyle }}">{{ toolName }}</span>
+<span style="font:400 14.5px/1.55 var(--sans);color:var(--text-2);text-wrap:pretty">{{ toolBlurb }}</span>
+</div>
+<span style="font:400 12px/1.4 var(--mono);color:var(--text-3);white-space:nowrap">returns <span style="color:var(--text-2)">{{ toolOutLong }}</span></span>
+</header>
+<div style="{{ wsStyle }}">
+<section style="{{ settingsColStyle }}">
+<div style="{{ settingsScrollStyle }}">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px 14px">
+<sc-for list="{{ fields }}" as="f" hint-placeholder-count="5">
+<div style="{{ f.colStyle }}">
+<sc-if value="{{ f.showLabel }}">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font:500 13px/1 var(--sans);color:var(--text-2)">{{ f.label }}</span><span style="font:400 11.5px/1 var(--mono);color:var(--text-3)">{{ f.hint }}</span></div>
+</sc-if>
+<sc-if value="{{ f.isSelect }}">
+<div style="{{ f.boxStyle }}">
+<select value="{{ f.value }}" onChange="{{ f.onChange }}" style="appearance:none;-webkit-appearance:none;flex:1;min-width:0;height:100%;padding:0 34px 0 14px;background:transparent;border:0;outline:none;color:var(--text);font:500 15px var(--sans);cursor:pointer">{{ f.optionEls }}</select>
+<span style="position:absolute;right:14px;pointer-events:none;font:400 11px var(--mono);color:var(--text-3)">▾</span>
+</div>
+</sc-if>
+<sc-if value="{{ f.isNumber }}">
+<div style="{{ f.boxStyle }}">
+<button onClick="{{ f.dec }}" style="all:unset;cursor:pointer;width:40px;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-3);font:400 18px var(--sans)" style-hover="color:var(--text);background:var(--hover)">−</button>
+<input value="{{ f.value }}" onChange="{{ f.onInput }}" inputMode="decimal" style="flex:1;min-width:0;width:100%;text-align:right;background:transparent;border:0;outline:none;color:var(--text);font:500 15px var(--mono);font-variant-numeric:tabular-nums;padding:0">
+<span style="font:400 12px var(--sans);color:var(--text-3);padding-left:6px;min-width:30px">{{ f.unit }}</span>
+<button onClick="{{ f.inc }}" style="all:unset;cursor:pointer;width:40px;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-3);font:400 18px var(--sans)" style-hover="color:var(--text);background:var(--hover)">+</button>
+</div>
+</sc-if>
+<sc-if value="{{ f.isText }}">
+<div style="{{ f.boxStyle }}">
+<input value="{{ f.value }}" onChange="{{ f.onInput }}" placeholder="{{ f.ph }}" spellCheck="false" style="flex:1;min-width:0;width:100%;height:100%;padding:0 14px;background:transparent;border:0;outline:none;color:var(--text);font:500 15px var(--mono)">
+</div>
+</sc-if>
+<sc-if value="{{ f.isMulti }}">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<sc-for list="{{ f.options }}" as="o">
+<button onClick="{{ o.toggle }}" style="{{ o.style }}">
+<span style="{{ o.boxStyle }}">{{ o.check }}</span>
+<span style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:500 14px/1.2 var(--sans);color:var(--text)">{{ o.label }}</span><span style="font:400 12px/1.3 var(--sans);color:var(--text-3)">{{ o.sub }}</span></span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ f.isToggle }}">
+<button onClick="{{ f.toggle }}" style="all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:14px;min-height:60px;padding:12px 16px;border-radius:12px;border:1px solid var(--line-soft);background:var(--raised)">
+<span style="display:flex;flex-direction:column;gap:4px;flex:1"><span style="font:500 14px var(--sans);color:var(--text)">{{ f.label }}</span><span style="font:400 12.5px var(--sans);color:var(--text-3)">{{ f.sub }}</span></span>
+<span style="{{ f.trackStyle }}"><span style="{{ f.knobStyle }}"></span></span>
+</button>
+</sc-if>
+<sc-if value="{{ f.isProgression }}">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);padding:3px;border-radius:11px;background:var(--sunk);border:1px solid var(--line-soft)">
+<sc-for list="{{ prog.modes }}" as="m"><button onClick="{{ m.select }}" style="{{ m.style }}">{{ m.label }}</button></sc-for>
+</div>
+<sc-if value="{{ prog.isPreset }}">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<sc-for list="{{ prog.presets }}" as="p"><button onClick="{{ p.select }}" style="{{ p.style }}"><span style="font:italic 400 18px/1 var(--serif);color:var(--text)">{{ p.name }}</span><span style="font:400 10.5px/1 var(--mono);color:var(--text-3)">{{ p.prog }}</span></button></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ prog.isNumerals }}">
+<div style="{{ prog.boxStyle }}">
+<input value="{{ prog.text }}" onChange="{{ prog.onInput }}" placeholder="i-VI-III-VII" spellCheck="false" style="flex:1;min-width:0;width:100%;height:100%;padding:0 14px;background:transparent;border:0;outline:none;color:var(--text);font:500 15px var(--mono);letter-spacing:0.02em">
+<span style="font:400 11px var(--mono);color:var(--text-3);padding-right:14px">I–VII</span>
+</div>
+</sc-if>
+<sc-if value="{{ prog.isRandom }}">
+<div style="font:400 13px/1.5 var(--sans);color:var(--text-2);padding:12px 14px;border-radius:12px;border:1px dashed var(--line);text-wrap:pretty">A new progression every run. Set a seed to get the same one back.</div>
+</sc-if>
+<sc-if value="{{ prog.showResolved }}">
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+<sc-for list="{{ prog.chords }}" as="c"><span style="{{ c.style }}"><span style="font:500 13px/1 var(--mono)">{{ c.name }}</span><span style="font:400 10.5px/1 var(--mono);opacity:0.7">{{ c.num }}</span></span></sc-for>
+<span style="font:400 12px var(--sans);color:var(--text-3);margin-left:4px">{{ prog.cycleNote }}</span>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ f.isTransforms }}">
+<div style="{{ tf.listStyle }}">
+<sc-for list="{{ tf.rows }}" as="r">
+<div style="{{ r.rowStyle }}">
+<button onClick="{{ r.toggle }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:44px">
+<span style="{{ r.boxStyle }}">{{ r.check }}</span>
+<span style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:500 14px/1.2 var(--sans);color:var(--text)">{{ r.label }}</span><span style="font:400 12px/1.2 var(--sans);color:var(--text-3)">{{ r.sub }}</span></span>
+</button>
+<sc-if value="{{ r.showNum }}">
+<div style="display:flex;align-items:center;height:36px;width:124px;flex:none;border-radius:9px;border:1px solid var(--line);background:var(--bg)">
+<button onClick="{{ r.dec }}" style="all:unset;cursor:pointer;width:32px;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-3)" style-hover="color:var(--text)">−</button>
+<span style="flex:1;text-align:center;font:500 13.5px var(--mono);color:var(--text);font-variant-numeric:tabular-nums">{{ r.valText }}</span>
+<button onClick="{{ r.inc }}" style="all:unset;cursor:pointer;width:32px;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-3)" style-hover="color:var(--text)">+</button>
+</div>
+</sc-if>
+<sc-if value="{{ r.showSlider }}">
+<div style="display:flex;align-items:center;gap:10px;width:124px;flex:none">
+<div style="position:relative;height:28px;display:flex;align-items:center;flex:1">
+<div style="position:absolute;left:0;right:0;height:4px;border-radius:4px;background:var(--line)"></div>
+<div style="{{ r.fillStyle }}"></div>
+<div style="{{ r.knobStyle }}"></div>
+<input type="range" min="0" max="1" step="0.05" value="{{ r.v }}" onChange="{{ r.onInput }}" style="position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer">
+</div>
+<span style="font:500 13px var(--mono);color:var(--text);width:32px;text-align:right">{{ r.valText }}</span>
+</div>
+</sc-if>
+<sc-if value="{{ r.showState }}"><span style="{{ r.stateStyle }}">{{ r.stateText }}</span></sc-if>
+</div>
+</sc-for>
+</div>
+<span style="font:400 12px/1.4 var(--mono);color:var(--text-3)">{{ tf.orderNote }}</span>
+</sc-if>
+<sc-if value="{{ f.isFile }}">
+<sc-if value="{{ fileView.isEmpty }}">
+<label onDragOver="{{ fileView.onDragOver }}" onDragLeave="{{ fileView.onDragLeave }}" onDrop="{{ fileView.onDrop }}" style="{{ fileView.zoneStyle }}">
+<input type="file" accept=".mid,.midi,audio/midi" onChange="{{ fileView.onPick }}" style="display:none">
+<span style="font:italic 300 21px/1.1 var(--serif);color:var(--text)">Drop a MIDI file here</span>
+<span style="font:400 13px var(--sans);color:var(--text-3)">or <span style="color:var(--accent);text-decoration:underline;text-underline-offset:3px">browse</span> · .mid or .midi</span>
+</label>
+<button onClick="{{ fileView.loadSample }}" style="all:unset;cursor:pointer;align-self:flex-start;font:400 12.5px var(--sans);color:var(--text-3);text-decoration:underline;text-underline-offset:3px" style-hover="color:var(--text-2)">No file handy? Use a sample loop</button>
+</sc-if>
+<sc-if value="{{ fileView.isFilled }}">
+<div onDragOver="{{ fileView.onDragOver }}" onDragLeave="{{ fileView.onDragLeave }}" onDrop="{{ fileView.onDrop }}" style="{{ fileView.cardStyle }}">
+<span style="{{ fileView.thumbStyle }}">{{ fileView.thumbText }}</span>
+<span style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0"><span style="font:500 13.5px/1.2 var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ fileView.name }}</span><span style="font:400 12px/1.2 var(--sans);color:var(--text-3)">{{ fileView.meta }}</span></span>
+<label style="cursor:pointer;font:500 12.5px var(--sans);color:var(--text-2);padding:8px 10px;border-radius:8px" style-hover="background:var(--hover);color:var(--text)">Replace<input type="file" accept=".mid,.midi,audio/midi" onChange="{{ fileView.onPick }}" style="display:none"></label>
+<button onClick="{{ fileView.remove }}" style="all:unset;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-3);font:400 16px var(--sans)" style-hover="background:var(--hover);color:var(--text)">×</button>
+</div>
+</sc-if>
+</sc-if>
+<sc-if value="{{ f.hasError }}">
+<div style="display:flex;gap:9px;align-items:flex-start;font:400 13px/1.45 var(--sans);color:var(--err);text-wrap:pretty"><span style="width:6px;height:6px;border-radius:6px;background:var(--err);flex:none;margin-top:6px"></span><span>{{ f.error }}</span></div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{ showRunBar }}">
+<div style="{{ runBarStyle }}">
+<button onClick="{{ run }}" style="{{ runBtnStyle }}">
+{{ runShimmer }}
+<span style="position:relative">{{ runLabel }}</span>
+<span style="position:relative;font:400 12px var(--mono);opacity:0.65">{{ runKbd }}</span>
+</button>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<button onClick="{{ reset }}" style="all:unset;cursor:pointer;font:400 12.5px var(--sans);color:var(--text-3);padding:4px 0" style-hover="color:var(--text-2)">Reset to defaults</button>
+<span style="font:400 12px var(--sans);color:var(--text-3);text-align:right">{{ runHint }}</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isLive }}">
+<div style="display:flex;align-items:center;gap:10px;padding-top:18px;font:400 12.5px var(--sans);color:var(--text-3)"><span style="width:6px;height:6px;border-radius:6px;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)"></span>Updates as you change settings — no run needed.</div>
+</sc-if>
+</section>
+<section ref="{{ resultRef }}" style="{{ resultColStyle }}">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px">
+<span style="font:500 10.5px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3)">{{ panelLabel }}</span>
+<span style="font:400 11.5px/1 var(--mono);color:var(--text-3)">{{ runMeta }}</span>
+</div>
+<sc-if value="{{ showIdle }}">
+<div style="position:relative;flex:1;min-height:320px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;padding:0 2px 6px">
+<div style="position:absolute;left:-30px;right:-30px;top:0;bottom:-30px;background-image:repeating-linear-gradient(180deg,transparent 0 13px,var(--line-soft) 13px 14px);-webkit-mask-image:linear-gradient(to bottom,transparent 10%,black 90%);mask-image:linear-gradient(to bottom,transparent 10%,black 90%);opacity:0.7;pointer-events:none"></div>
+<div style="position:relative;font:italic 300 27px/1.2 var(--serif);color:var(--text);max-width:440px;text-wrap:pretty">{{ idleTitle }}</div>
+<div style="position:relative;font:400 14px/1.6 var(--sans);color:var(--text-2);max-width:440px;text-wrap:pretty">{{ idleBody }}</div>
+</div>
+</sc-if>
+<sc-if value="{{ showRunning }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="font:italic 300 26px/1.2 var(--serif);color:var(--text)">{{ runningTitle }}</div>
+<div style="font:400 13.5px/1.5 var(--sans);color:var(--text-3);margin-bottom:6px">{{ runningSub }}</div>
+<sc-for list="{{ skeletons }}" as="sk">
+<div style="position:relative;overflow:hidden;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:12px;border:1px solid var(--line-soft);background:var(--bg)">
+{{ sk.band }}
+<span style="display:block;width:46%;height:10px;border-radius:4px;background:var(--line-soft)"></span>
+<span style="display:block;width:100%;height:34px;border-radius:6px;background:var(--line-soft);opacity:0.5"></span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ showErrorSum }}">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:10px;align-items:center"><span style="width:7px;height:7px;border-radius:7px;background:var(--err)"></span><span style="font:500 10.5px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--err)">{{ errKicker }}</span></div>
+<div style="font:300 28px/1.2 var(--serif);color:var(--text);margin-bottom:6px">{{ errTitle }}</div>
+<sc-for list="{{ errList }}" as="e">
+<div style="display:grid;grid-template-columns:minmax(0,8rem) minmax(0,1fr);gap:14px;padding:13px 0;border-top:1px solid var(--line-soft)"><span style="font:500 13px/1.45 var(--sans);color:var(--text-2)">{{ e.label }}</span><span style="font:400 13.5px/1.45 var(--sans);color:var(--text)">{{ e.msg }}</span></div>
+</sc-for>
+<div style="font:400 13px/1.5 var(--sans);color:var(--text-3);padding-top:12px;border-top:1px solid var(--line-soft)">Everything else is kept as you left it.</div>
+</div>
+</sc-if>
+<sc-if value="{{ showZip }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;min-width:0"><div style="font:300 32px/1.05 var(--serif);color:var(--text)">{{ zip.title }}</div><div style="font:400 12.5px/1.4 var(--mono);color:var(--text-2);word-break:break-all">{{ zip.name }} <span style="color:var(--text-3)">· {{ zip.meta }}</span></div></div>
+<button style="all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;height:44px;padding:0 18px;border-radius:11px;background:var(--accent);color:var(--accent-ink);font:600 14px var(--sans)" style-hover="filter:brightness(1.07)">Download .zip <span style="font:400 13px var(--mono)">↓</span></button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+<sc-for list="{{ zip.summary }}" as="s"><span style="font:400 11.5px/1 var(--mono);color:var(--text-2);padding:6px 9px;border-radius:999px;border:1px solid var(--line-soft)">{{ s }}</span></sc-for>
+<button onClick="{{ zip.reuseSeed }}" style="{{ zip.reuseStyle }}">{{ zip.reuseLabel }}</button>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ zip.files }}" as="fl">
+<div style="display:flex;flex-direction:column;gap:10px;padding:16px 0 4px;border-top:1px solid var(--line-soft)">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap"><span style="font:500 13.5px/1.3 var(--mono);color:var(--text);word-break:break-all">{{ fl.name }}</span><span style="font:400 11.5px var(--mono);color:var(--text-3)">{{ fl.meta }}</span></div>
+<div style="position:relative;height:50px;border-radius:7px;overflow:hidden;background-color:var(--bg);background-image:repeating-linear-gradient(90deg,var(--line-soft) 0 1px,transparent 1px 25%);border:1px solid var(--line-soft)">
+<sc-for list="{{ fl.notes }}" as="n"><span style="{{ n }}"></span></sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ showSingle }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;min-width:0"><div style="font:300 32px/1.05 var(--serif);color:var(--text)">One new clip</div><div style="font:400 12.5px/1.4 var(--mono);color:var(--text-2);word-break:break-all">{{ single.name }} <span style="color:var(--text-3)">· {{ single.meta }}</span></div></div>
+<button style="all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;height:44px;padding:0 18px;border-radius:11px;background:var(--accent);color:var(--accent-ink);font:600 14px var(--sans)" style-hover="filter:brightness(1.07)">Download .mid <span style="font:400 13px var(--mono)">↓</span></button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ single.ops }}" as="op"><span style="font:400 11.5px/1 var(--mono);color:var(--accent);padding:6px 9px;border-radius:999px;background:var(--accent-soft)">{{ op }}</span></sc-for>
+</div>
+<div style="position:relative;height:150px;border-radius:9px;overflow:hidden;background-color:var(--bg);background-image:repeating-linear-gradient(90deg,var(--line-soft) 0 1px,transparent 1px 12.5%);border:1px solid var(--line-soft)">
+<sc-for list="{{ single.notes }}" as="n"><span style="{{ n }}"></span></sc-for>
+</div>
+<div style="display:flex;gap:18px;font:400 12px var(--sans);color:var(--text-3)"><span style="display:flex;align-items:center;gap:7px"><span style="width:14px;height:6px;border-radius:2px;background:var(--text-3);opacity:0.35"></span>original</span><span style="display:flex;align-items:center;gap:7px"><span style="width:14px;height:6px;border-radius:2px;background:var(--accent)"></span>mutated</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ showReport }}">
+<div style="display:flex;flex-direction:column;gap:30px">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:0"><div style="font:300 32px/1.05 var(--serif);color:var(--text)">{{ rep.title }}</div><div style="font:400 13px/1.4 var(--sans);color:var(--text-3)">{{ rep.sub }}</div></div>
+<button onClick="{{ copyReport }}" style="all:unset;box-sizing:border-box;cursor:pointer;height:38px;padding:0 14px;display:flex;align-items:center;border-radius:10px;border:1px solid var(--line);font:500 13px var(--sans);color:var(--text-2)" style-hover="color:var(--text);background:var(--hover)">{{ copyLabel }}</button>
+</div>
+<sc-for list="{{ rep.sections }}" as="sec">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:12px"><span style="font:500 10.5px/1 var(--mono);letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);white-space:nowrap">{{ sec.title }}</span><span style="flex:1;height:1px;background:var(--line-soft)"></span><span style="font:400 12px var(--sans);color:var(--text-3)">{{ sec.note }}</span></div>
+<sc-if value="{{ sec.isHead }}">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:300 46px/1.02 var(--serif);letter-spacing:-0.01em;color:var(--text)">{{ sec.big }}</div><div style="font:400 13px/1.5 var(--mono);color:var(--text-2);word-spacing:0.25em">{{ sec.cap }}</div></div>
+</sc-if>
+<sc-if value="{{ sec.isKv }}">
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ sec.kv }}" as="r">
+<div style="display:grid;grid-template-columns:minmax(0,8.5rem) minmax(0,1fr);gap:16px;padding:10px 0;border-bottom:1px dashed var(--line-soft);align-items:baseline"><span style="font:400 13px var(--sans);color:var(--text-2)">{{ r.k }}</span><span style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline"><span style="font:500 14px var(--mono);color:var(--text);font-variant-numeric:tabular-nums">{{ r.v }}</span><span style="font:400 12.5px var(--sans);color:var(--text-3)">{{ r.n }}</span></span></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ sec.isTable }}">
+<div style="overflow-x:auto;margin:0 -10px;padding:0 10px">
+<div style="display:flex;flex-direction:column;min-width:320px">
+<sc-for list="{{ sec.rows }}" as="row"><div style="{{ row.st }}"><sc-for list="{{ row.cells }}" as="c"><span style="{{ c.st }}">{{ c.v }}</span></sc-for></div></sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ sec.isBars }}">
+<div style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ sec.bars }}" as="b">
+<div style="display:grid;grid-template-columns:2.4rem minmax(0,1fr) 2.2rem;gap:12px;align-items:center;height:24px"><span style="font:500 13px var(--mono);color:var(--text-2)">{{ b.label }}</span><span style="position:relative;height:6px;border-radius:6px;background:var(--line-soft);overflow:hidden"><span style="{{ b.fill }}"></span></span><span style="font:400 12.5px var(--mono);color:var(--text-3);text-align:right">{{ b.count }}</span></div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+</div>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:800},&quot;tool&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;ambient&quot;,&quot;drums&quot;,&quot;mutate&quot;,&quot;analyze&quot;,&quot;bpmsync&quot;,&quot;scales&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;phase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;running&quot;,&quot;done&quot;,&quot;error&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;file&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;good&quot;,&quot;bad&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;errorCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;progression&quot;,&quot;notransform&quot;,&quot;parts&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;menuOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;scrollToResult&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;keyboard&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const SH=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const FL=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const KEYS=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const MAJ=[0,2,4,5,7,9,11];
+const SCALES={minor:{iv:[0,2,3,5,7,8,10],m:5},dorian:{iv:[0,2,3,5,7,9,10],m:1},phrygian:{iv:[0,1,3,5,7,8,10],m:2},lydian:{iv:[0,2,4,6,7,9,11],m:3},mixolydian:{iv:[0,2,4,5,7,9,10],m:4},major:{iv:MAJ,m:0},pentatonic:{iv:[0,3,5,7,10],m:5}};
+const MODES=['major','dorian','phrygian','lydian','mixolydian','minor','locrian'];
+const ROM=['I','II','III','IV','V','VI','VII'];
+const PRESETS=[{id:'drift',prog:'i-VI-III-VII'},{id:'lament',prog:'i-iv-VI-v'},{id:'descent',prog:'i-VII-VI-v'},{id:'suspended',prog:'i-IV-i-IV'},{id:'bloom',prog:'VI-VII-i-III'},{id:'static',prog:'i'}];
+const TOOLS=[
+{id:'ambient',group:'Generate',name:'Ambient generator',blurb:'Up to four clips on one shared progression — slow pads, a stepwise melody, a bass drone and an arpeggio.',out:'.zip',outLong:'a .zip of MIDI clips',verb:'Generate clips',busy:'Generating'},
+{id:'drums',group:'Generate',name:'Drum generator',blurb:'Sparse and four-on-the-floor drum clips at your tempo.',out:'.zip',outLong:'a .zip of MIDI clips',verb:'Generate drums',busy:'Generating'},
+{id:'mutate',group:'Transform',name:'Mutate',blurb:'Stack transpose, humanize, reverse, stretch and velocity changes onto a MIDI file.',out:'.mid',outLong:'one .mid file',verb:'Mutate file',busy:'Mutating'},
+{id:'analyze',group:'Transform',name:'Analyze',blurb:'Read a MIDI file: tempo, length, notes, velocity and a best guess at key and scale.',out:'report',outLong:'a text report',verb:'Analyze file',busy:'Reading'},
+{id:'bpmsync',group:'Reference',name:'BPM sync',blurb:'Delay times and LFO rates for every note division at one tempo.',out:'table',outLong:'tables',live:true},
+{id:'scales',group:'Reference',name:'Scale explorer',blurb:'Notes, frequencies, the chord on each degree and related modes for any key.',out:'table',outLong:'tables',live:true}];
+const TB=Object.fromEntries(TOOLS.map(t=>[t.id,t]));
+const GROUPS=[{label:'Generate',sub:'new MIDI from settings'},{label:'Transform',sub:'reshape a file'},{label:'Reference',sub:'quick lookups'}];
+const bpmF={id:'bpm',type:'number',label:'Tempo',unit:'BPM',min:20,max:300,step:1,half:1};
+const barsF={id:'bars',type:'number',label:'Length',unit:'bars',min:1,max:256,step:1,half:1};
+const keyF={id:'key',type:'select',label:'Key',opts:KEYS.map(k=>({v:k,l:k})),half:1};
+const scaleF={id:'scale',type:'select',label:'Scale',opts:Object.keys(SCALES).map(s=>({v:s,l:s[0].toUpperCase()+s.slice(1)})),half:1};
+const seedF={id:'seed',type:'text',label:'Seed',hint:'optional',ph:'random',half:1};
+const SCHEMA={
+ambient:[keyF,scaleF,bpmF,barsF,{id:'progression',type:'progression',label:'Chord progression'},{id:'bpc',type:'number',label:'Bars per chord',unit:'bars',min:1,max:16,step:1,half:1},seedF,{id:'parts',type:'multi',label:'Parts',hint:'at least one',opts:[{v:'chords',l:'Chord pads',s:'slow, sustained'},{v:'melody',l:'Melody',s:'stepwise'},{v:'bass',l:'Bass drone',s:'root, held'},{v:'arp',l:'Arpeggio',s:'broken chords'}]}],
+drums:[bpmF,barsF,{...seedF,half:0},{id:'patterns',type:'multi',label:'Patterns',hint:'at least one',opts:[{v:'sparse',l:'Sparse',s:'kick, rim, air'},{v:'four',l:'Four on the floor',s:'steady kick, offbeat hats'}]}],
+mutate:[{id:'file',type:'file',label:'MIDI file'},{id:'tf',type:'transforms',label:'Transforms',hint:'stack · pick one or more'},{...seedF,hint:'optional · humanize'}],
+analyze:[{id:'file',type:'file',label:'MIDI file'},{id:'dist',type:'toggle',label:'Note distribution',s:'Add a count per pitch class to the report'}],
+bpmsync:[bpmF],
+scales:[keyF,scaleF]};
+const LABELS={progression:'Progression',parts:'Parts',patterns:'Patterns',file:'MIDI file',tf:'Transforms',seed:'Seed',bpm:'Tempo',bars:'Length',bpc:'Bars per chord'};
+const TF=[{id:'transpose',l:'Transpose',s:'semitones',kind:'num',min:-24,max:24,step:1},{id:'humanize',l:'Humanize',s:'timing & velocity drift, 0–1',kind:'slider'},{id:'reverse',l:'Reverse',s:'play backwards',kind:'none'},{id:'stretch',l:'Time-stretch',s:'× length',kind:'num',min:0.25,max:8,step:0.25},{id:'velocity',l:'Velocity scale',s:'× velocity',kind:'num',min:0.1,max:2,step:0.05}];
+const DEF={ambient:{key:'G',scale:'minor',bpm:80,bars:16,progMode:'preset',preset:'drift',progText:'i-VI-III-VII',bpc:4,seed:'',parts:['chords','melody','bass','arp']},
+drums:{bpm:80,bars:16,seed:'',patterns:['sparse','four']},
+mutate:{seed:'',tf:{transpose:{on:true,v:-3},humanize:{on:true,v:0.35},reverse:{on:false},stretch:{on:false,v:2},velocity:{on:false,v:0.8}}},
+analyze:{dist:true},bpmsync:{bpm:80},scales:{key:'G',scale:'minor'}};
+const SAMPLE={name:'night_pads_v2.mid',size:'6.1 KB',meta:'6.1 KB · 1 track · 4/4'};
+const THEMES={dark:{'--bg':'oklch(0.17 0.012 250)','--rail':'oklch(0.155 0.011 250)','--raised':'oklch(0.215 0.013 250)','--sunk':'oklch(0.145 0.011 250)','--line':'oklch(0.33 0.014 250)','--line-soft':'oklch(0.255 0.012 250)','--hover':'oklch(0.25 0.013 250)','--text':'oklch(0.94 0.01 85)','--text-2':'oklch(0.77 0.014 250)','--text-3':'oklch(0.61 0.016 250)','--accent':'oklch(0.82 0.075 165)','--accent-ink':'oklch(0.2 0.03 165)','--accent-soft':'oklch(0.82 0.075 165 / 0.12)','--accent-line':'oklch(0.82 0.075 165 / 0.45)','--err':'oklch(0.78 0.11 45)','--err-soft':'oklch(0.78 0.11 45 / 0.14)','--glow':'oklch(0.55 0.06 200 / 0.16)'},
+light:{'--bg':'oklch(0.968 0.006 85)','--rail':'oklch(0.95 0.008 85)','--raised':'oklch(0.99 0.004 85)','--sunk':'oklch(0.945 0.009 85)','--line':'oklch(0.84 0.012 85)','--line-soft':'oklch(0.9 0.01 85)','--hover':'oklch(0.925 0.01 85)','--text':'oklch(0.22 0.018 250)','--text-2':'oklch(0.42 0.018 250)','--text-3':'oklch(0.51 0.016 250)','--accent':'oklch(0.47 0.075 175)','--accent-ink':'oklch(0.98 0.01 175)','--accent-soft':'oklch(0.47 0.075 175 / 0.09)','--accent-line':'oklch(0.47 0.075 175 / 0.45)','--err':'oklch(0.52 0.15 38)','--err-soft':'oklch(0.52 0.15 38 / 0.1)','--glow':'oklch(0.88 0.035 200 / 0.4)'}};
+const FONTS={'--serif':"'Newsreader', Georgia, serif",'--sans':"'Instrument Sans', system-ui, sans-serif",'--mono':"'JetBrains Mono', ui-monospace, monospace"};
+
+const flats=(t,s)=>[5,10,3,8,1,6].includes((t-MAJ[SCALES[s].m]+120)%12);
+const nn=(pc,f)=>(f?FL:SH)[((pc%12)+12)%12];
+const fileTag=k=>k.replace('♯','s').replace('♭','b');
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const RX=/^([b#♭♯]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(°|o|\+|7|maj7|sus2|sus4)?$/;
+function parseProg(str){
+  const toks=String(str||'').trim().split(/[\s,\-–—]+/).filter(Boolean);
+  if(!toks.length)return{toks,items:[],error:'Type at least one numeral, e.g. i-VI-III-VII.'};
+  const items=toks.map(tk=>{const m=tk.match(RX);if(!m)return{tok:tk,ok:false};return{tok:tk,ok:true,acc:m[1],deg:ROM.indexOf(m[2].toUpperCase()),minor:m[2]!==m[2].toUpperCase(),suf:m[3]||''};});
+  const bad=items.find(i=>!i.ok);
+  return{toks,items,chords:items.filter(i=>i.ok),error:bad?`“${bad.tok}” isn't a scale degree. Use I–VII — uppercase for major, lowercase for minor, e.g. i-VI-III-VII.`:null};
+}
+function chordName(c,t,s){
+  const iv=SCALES[s].iv.length===7?SCALES[s].iv:SCALES.minor.iv;
+  const acc=/[b♭]/.test(c.acc)?-1:/[#♯]/.test(c.acc)?1:0;
+  const dim=c.suf==='°'||c.suf==='o';
+  return nn(t+iv[c.deg]+acc,flats(t,s))+(dim?'°':c.minor?'m':'')+(c.suf&&!dim?c.suf:'');
+}
+const nst=(n,R,ghost)=>({position:'absolute',left:(n.l*100).toFixed(3)+'%',width:`calc(${(n.w*100).toFixed(3)}% - 1px)`,bottom:(n.row/R*100).toFixed(2)+'%',height:`calc(${(100/R).toFixed(2)}% - 1px)`,minHeight:2,borderRadius:1.5,background:ghost?'var(--text-3)':'var(--accent)',opacity:ghost?0.28:n.op});
+function genClip(kind,chords,bars,bpc,r){
+  const out=[],L=bars,slots=Math.ceil(bars/bpc);
+  if(kind==='chords'){for(let i=0;i<slots;i++){const c=chords[i%chords.length];[0,2,4].forEach((k,j)=>out.push({l:i*bpc/L,w:Math.min(bpc,L-i*bpc)/L,row:2+c.deg+k,op:0.45+j*0.14}));}return{notes:out,R:16};}
+  if(kind==='melody'){let t=0,row=8+Math.floor(r()*3);while(t<L*4){const d=[1,2,2,3,4][Math.floor(r()*5)];if(r()<0.2){t+=d;continue;}row=Math.max(5,Math.min(14,row+[-1,-1,0,1,1][Math.floor(r()*5)]));out.push({l:t/(L*4),w:Math.min(d,L*4-t)/(L*4),row,op:0.45+r()*0.55});t+=d;}return{notes:out,R:16};}
+  if(kind==='bass'){for(let i=0;i<slots;i+=2)out.push({l:i*bpc/L,w:Math.min(bpc*2,L-i*bpc)/L,row:1,op:0.8});return{notes:out,R:7};}
+  if(kind==='arp'){const pat=[0,2,4,7,4,2];for(let b=0;b<L*4;b++){const c=chords[Math.floor(b/4/bpc)%chords.length];out.push({l:b/(L*4),w:1/(L*4),row:Math.min(15,2+((c.deg+pat[b%6])%14)),op:0.4+r()*0.5});}return{notes:out,R:16};}
+  const S=L*16,w=1.6/S;
+  if(kind==='sparse'){for(let s=0;s<S;s++){const p=s%16;if(p===0&&r()<0.8)out.push({l:s/S,w,row:0,op:0.85});else if((p===12||p===6)&&r()<0.3)out.push({l:s/S,w,row:1,op:0.6});else if(r()<0.06)out.push({l:s/S,w,row:2,op:0.4});}return{notes:out,R:3};}
+  for(let b=0;b<L*4;b++){out.push({l:b/(L*4),w,row:0,op:0.9});out.push({l:(b+0.5)/(L*4),w,row:2,op:0.45+r()*0.3});if(b%2)out.push({l:b/(L*4),w,row:1,op:0.65});}return{notes:out,R:3};
+}
+const segSt=on=>({all:'unset',boxSizing:'border-box',cursor:'pointer',textAlign:'center',height:32,lineHeight:'32px',borderRadius:8,font:'500 13px var(--sans)',color:on?'var(--text)':'var(--text-3)',background:on?'var(--raised)':'transparent',boxShadow:on?'0 1px 0 var(--line-soft), inset 0 0 0 1px var(--line-soft)':'none'});
+const boxSt=err=>({position:'relative',display:'flex',alignItems:'center',height:46,borderRadius:11,background:'var(--raised)',border:`1px solid ${err?'var(--err)':'var(--line)'}`,boxShadow:err?'0 0 0 3px var(--err-soft)':'none',overflow:'hidden',boxSizing:'border-box'});
+const checkSt=on=>({width:18,height:18,flex:'none',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',font:'600 11px var(--sans)',color:'var(--accent-ink)',background:on?'var(--accent)':'transparent',border:on?'1px solid var(--accent)':'1px solid var(--line)',boxSizing:'border-box'});
+const cardSt=(on,err)=>({all:'unset',boxSizing:'border-box',cursor:'pointer',display:'flex',alignItems:'flex-start',gap:11,padding:'13px 13px',minHeight:62,borderRadius:12,background:on?'var(--accent-soft)':'var(--raised)',border:`1px solid ${err?'var(--err)':on?'var(--accent-line)':'var(--line-soft)'}`});
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const f2=(x,d)=>Number(x).toFixed(d);
+
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.resultRef=React.createRef();this.rootRef=React.createRef();
+    this.state=this.initState(props);
+  }
+  initState(p){
+    const vals=JSON.parse(JSON.stringify(DEF));
+    const tool=p.tool&&p.tool!=='none'?p.tool:null;
+    let file=null;
+    if(p.file==='good')file={...SAMPLE};
+    if(p.file==='bad')file={name:'field_recording.wav',size:'2.4 MB',meta:'2.4 MB · audio',bad:true};
+    const ec=p.errorCase;
+    if(ec==='progression'){vals.ambient.progMode='numerals';vals.ambient.progText='i-ix-VI-VII';}
+    if(ec==='notransform')Object.values(vals.mutate.tf).forEach(t=>t.on=false);
+    if(ec==='parts')vals.ambient.parts=[];
+    const runs={},errs={};
+    if(tool&&p.phase&&p.phase!=='idle'){
+      const r={phase:p.phase,n:p.phase==='running'?4:3,ms:'1.2'};
+      if(p.phase==='done')r.result=this.compute(tool,vals[tool],file,4127);
+      if(p.phase==='error')errs[tool]=this.validate(tool,vals[tool],file);
+      runs[tool]=r;
+    }
+    return{tool,vals,file,runs,errs,theme:p.theme||'dark',menuOpen:!!p.menuOpen,drag:false,copied:false};
+  }
+  componentDidMount(){
+    if(this.props.keyboard!==false){this._kd=e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();this.run();}};window.addEventListener('keydown',this._kd);}
+    if(this.props.scrollToResult)setTimeout(()=>{const el=this.resultRef.current,sc=this.rootRef.current;if(el&&sc)sc.scrollTop=el.offsetTop-64;},120);
+  }
+  componentWillUnmount(){if(this._kd)window.removeEventListener('keydown',this._kd);clearTimeout(this._t);}
+  setVals(patch){const t=this.state.tool;this.setState(s=>{const e={...(s.errs[t]||{})};Object.keys(patch).forEach(k=>{delete e[k];if(k==='progMode'||k==='progText'||k==='preset')delete e.progression;});return{vals:{...s.vals,[t]:{...s.vals[t],...patch}},errs:{...s.errs,[t]:e}};});}
+  setVal(id,v){this.setVals({[id]:v});}
+  step(f,d){const cur=parseFloat(this.state.vals[this.state.tool][f.id]);let n=isNaN(cur)?f.min:cur+d*f.step;n=Math.max(f.min,Math.min(f.max,Math.round(n/f.step)*f.step));this.setVal(f.id,n);}
+  toggleMulti(id,x){const a=this.state.vals[this.state.tool][id];this.setVal(id,a.includes(x)?a.filter(y=>y!==x):[...a,x]);}
+  setTf(id,patch){const tf=this.state.vals.mutate.tf;this.setVal('tf',{...tf,[id]:{...tf[id],...patch}});}
+  acceptFile(file){
+    if(!file)return;
+    const size=file.size>1e6?(file.size/1e6).toFixed(1)+' MB':(file.size/1024).toFixed(1)+' KB';
+    const bad=!/\.midi?$/i.test(file.name);
+    const f={name:file.name,size,meta:bad?size+' · not MIDI':size+' · MIDI',bad};
+    this.setState(s=>{const errs={...s.errs};['mutate','analyze'].forEach(t=>{const e={...(errs[t]||{})};delete e.file;errs[t]=e;});return{file:f,drag:false,errs};});
+  }
+  badFileMsg(name){const ext=(name.split('.').pop()||'').toLowerCase();const audio=['wav','mp3','aif','aiff','flac','ogg','m4a'].includes(ext);return audio?`“${name}” is audio, not MIDI. Export the part as a .mid from your music software and drop that instead.`:`“${name}” isn't a MIDI file. Drop a .mid or .midi file.`;}
+  liveErrors(tool,v){
+    const e={};if(!tool)return e;
+    (SCHEMA[tool]||[]).forEach(f=>{if(f.type==='number'){const n=Number(v[f.id]);if(v[f.id]===''||isNaN(n)||n<f.min||n>f.max)e[f.id]=`Use a value from ${f.min} to ${f.max}.`;}});
+    if('seed' in v&&v.seed!==''&&!/^\d+$/.test(String(v.seed).trim()))e.seed='Seeds are whole numbers, e.g. 4127.';
+    if(tool==='ambient'){if(v.progMode==='numerals'){const P=parseProg(v.progText);if(P.error)e.progression=P.error;}if(!e.bpc&&!e.bars&&Number(v.bpc)>Number(v.bars))e.bpc=`Longer than the whole piece (${v.bars} bars).`;}
+    if((tool==='mutate'||tool==='analyze')&&this.state&&this.state.file&&this.state.file.bad)e.file=this.badFileMsg(this.state.file.name);
+    return e;
+  }
+  validate(tool,v,file){
+    const e=this.state?this.liveErrors(tool,v):{};
+    if(!this.state){if(tool==='ambient'&&v.progMode==='numerals'){const P=parseProg(v.progText);if(P.error)e.progression=P.error;}if(file&&file.bad)e.file=this.badFileMsg(file.name);}
+    if(tool==='ambient'&&!v.parts.length)e.parts='Pick at least one part to generate.';
+    if(tool==='drums'&&!v.patterns.length)e.patterns='Pick at least one pattern.';
+    if((tool==='mutate'||tool==='analyze')&&!file)e.file='Add a MIDI file first.';
+    if(tool==='mutate'&&!Object.values(v.tf).some(t=>t.on))e.tf='Turn on at least one transform. They stack, so any combination works.';
+    return e;
+  }
+  run=()=>{
+    const t=this.state.tool;if(!t||TB[t].live)return;
+    const prev=this.state.runs[t]||{};if(prev.phase==='running')return;
+    const v=this.state.vals[t];const errs=this.validate(t,v,this.state.file);
+    if(Object.keys(errs).length){this.setState(s=>({errs:{...s.errs,[t]:errs},runs:{...s.runs,[t]:{...prev,phase:'error'}}}));return;}
+    const seed=v.seed!==''?parseInt(v.seed,10):Math.floor(1000+Math.random()*8999);
+    const n=(prev.n||0)+1;
+    this.setState(s=>({errs:{...s.errs,[t]:{}},runs:{...s.runs,[t]:{phase:'running',n,result:prev.result}}}));
+    const ms=t==='ambient'?1500:t==='drums'?800:600;
+    clearTimeout(this._t);
+    this._t=setTimeout(()=>{const result=this.compute(t,this.state.vals[t],this.state.file,seed);this.setState(s=>({runs:{...s.runs,[t]:{phase:'done',n,result,ms:(ms/1000*0.85).toFixed(1)}}}));},ms);
+  };
+  compute(tool,v,file,seed){
+    const r=rng(seed||1);
+    if(tool==='ambient'){
+      const t=KEYS.indexOf(v.key),s=v.scale,fl=flats(t,s);
+      let progStr=v.progMode==='preset'?PRESETS.find(p=>p.id===v.preset).prog:v.progText;
+      if(v.progMode==='random'){const pool=['major','lydian','mixolydian'].includes(s)?['I','ii','iii','IV','V','vi']:['i','iv','v','VI','III','VII'];progStr=[pool[0],...[0,1,2].map(()=>pool[1+Math.floor(r()*(pool.length-1))])].join('-');}
+      const P=parseProg(progStr);const bars=Number(v.bars),bpc=Number(v.bpc);
+      const tag=`${fileTag(nn(t,fl))}_${s}`;
+      const NAMES={chords:'slow_chords',melody:'melody',bass:'bass_drone',arp:'arpeggio'};
+      const files=['chords','melody','bass','arp'].filter(p=>v.parts.includes(p)).map(p=>{const c=genClip(p,P.chords,bars,bpc,r);return{name:`${NAMES[p]}_${tag}.mid`,meta:`${bars} bars · ${c.notes.length} notes`,notes:c.notes.map(n=>nst(n,c.R)),count:c.notes.length};});
+      const total=files.reduce((a,f)=>a+f.count,0);
+      const word=['','One clip','Two clips','Three clips','Four clips'][files.length];
+      const progLabel=v.progMode==='preset'?`${v.preset} · ${P.toks.join('–')}`:v.progMode==='random'?`random · ${P.toks.join('–')}`:P.toks.join('–');
+      return{kind:'zip',seed,title:word,name:`ambient_${tag}_${v.bpm}bpm.zip`,meta:`${files.length} files · ${(0.6+total*0.011).toFixed(1)} KB`,summary:[`${nn(t,fl)} ${s}`,`${v.bpm} BPM`,`${bars} bars`,progLabel,`${bpc} bars/chord`],files};
+    }
+    if(tool==='drums'){
+      const bars=Number(v.bars);const NAMES={sparse:'drums_sparse',four:'drums_four_on_the_floor'};
+      const files=['sparse','four'].filter(p=>v.patterns.includes(p)).map(p=>{const c=genClip(p,[],bars,4,r);return{name:`${NAMES[p]}_${v.bpm}bpm.mid`,meta:`${bars} bars · ${c.notes.length} hits`,notes:c.notes.map(n=>nst(n,c.R)),count:c.notes.length};});
+      return{kind:'zip',seed,title:files.length===2?'Two drum clips':'One drum clip',name:`drums_${v.bpm}bpm.zip`,meta:`${files.length} files · ${(0.4+files.reduce((a,f)=>a+f.count,0)*0.008).toFixed(1)} KB`,summary:[`${v.bpm} BPM`,`${bars} bars`],files};
+    }
+    if(tool==='mutate'){
+      const base=genClip('melody',[],16,4,rng(77));const tf=v.tf;const R=16;
+      const fs=tf.stretch.on?Number(tf.stretch.v):1,span=Math.max(fs,1);
+      const ghost=base.notes.map(n=>nst({...n,l:n.l/span,w:n.w/span},R,true));
+      const mut=base.notes.map(n=>{let m={...n};if(tf.reverse.on)m.l=1-n.l-n.w;m.l=m.l*fs/span;m.w=m.w*fs/span;if(tf.transpose.on)m.row=Math.max(0,Math.min(15,m.row+Math.round(tf.transpose.v/2)));if(tf.humanize.on){m.l=Math.max(0,m.l+(r()-0.5)*0.012*tf.humanize.v);m.op=Math.max(0.2,Math.min(1,m.op+(r()-0.5)*tf.humanize.v));}if(tf.velocity.on)m.op=Math.max(0.15,Math.min(1,m.op*tf.velocity.v));return nst(m,R);});
+      const ops=[];if(tf.transpose.on)ops.push(`transpose ${tf.transpose.v>0?'+':tf.transpose.v<0?'−':''}${Math.abs(tf.transpose.v)} st`);if(tf.humanize.on)ops.push(`humanize ${f2(tf.humanize.v,2)}`);if(tf.reverse.on)ops.push('reverse');if(tf.stretch.on)ops.push(`stretch ×${tf.stretch.v}`);if(tf.velocity.on)ops.push(`velocity ×${tf.velocity.v}`);
+      const nm=(file?file.name:'clip.mid').replace(/\.midi?$/i,'');
+      return{kind:'single',seed,name:`${nm}_mutated.mid`,meta:`${16*fs} bars · ${base.notes.length} notes · ${file?file.size:'—'}`,ops,notes:[...ghost,...mut]};
+    }
+    if(tool==='analyze')return this.analyzeReport(file,v);
+    if(tool==='bpmsync')return this.bpmReport(v);
+    if(tool==='scales')return this.scaleReport(v);
+  }
+  table(title,note,cols,align,head,rows,hi){
+    const rs=[{st:{display:'grid',gridTemplateColumns:cols,gap:14,padding:'0 0 9px',borderBottom:'1px solid var(--line)'},cells:head.map((h,i)=>({v:h,st:{font:'500 10.5px/1 var(--mono)',letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--text-3)',textAlign:align[i]==='r'?'right':'left'}}))}];
+    rows.forEach((row,ri)=>{const on=ri===hi;rs.push({st:{display:'grid',gridTemplateColumns:cols,gap:14,padding:on?'10px 10px':'10px 0',margin:on?'0 -10px':'0',borderRadius:on?8:0,background:on?'var(--accent-soft)':'transparent',borderBottom:on?'1px solid transparent':'1px solid var(--line-soft)',alignItems:'baseline'},cells:row.map((c,i)=>({v:c,st:{font:`${i===0?500:400} 13.5px/1.3 var(--mono)`,fontVariantNumeric:'tabular-nums',color:on&&i===0?'var(--accent)':i===0?'var(--text-2)':'var(--text)',textAlign:align[i]==='r'?'right':'left',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}))});});
+    return{title,note,isTable:true,rows:rs,plain:[head,...rows]};
+  }
+  analyzeReport(file,v){
+    const name=file?file.name:'—';
+    const dist=[['C',4],['C♯',0],['D',31],['E♭',2],['E',14],['F',22],['F♯',0],['G',9],['A',26],['B♭',3],['B',11],['C',0]].slice(0,11);
+    const max=31;
+    const secs=[{title:'Best-guess key',note:'confidence 0.82',isHead:true,big:'D dorian',cap:'also likely  A minor 0.74 · F major 0.69'},
+    {title:'Summary',note:'',isKv:true,kv:[{k:'Tempo',v:'92.0 BPM',n:'from file header'},{k:'Time signature',v:'4/4',n:''},{k:'Duration',v:'0:41.7',n:'16 bars'},{k:'Notes',v:'96',n:'1 track · channel 1'},{k:'Velocity',v:'38 – 104',n:'mean 71'},{k:'Pitch range',v:'D2 – A5',n:'43 semitones'}]}];
+    if(v.dist)secs.push({title:'Note distribution',note:'count per pitch class',isBars:true,bars:dist.map(([l,c])=>({label:l,count:String(c),fill:{position:'absolute',left:0,top:0,bottom:0,width:(c/max*100)+'%',borderRadius:6,background:c?'var(--accent)':'transparent',opacity:0.35+0.65*c/max}}))});
+    return{kind:'report',title:'Analysis',sub:name,sections:secs};
+  }
+  bpmReport(v){
+    const b=Number(v.bpm);const div=[['4 bars',0.25],['2 bars',0.5],['1 bar',1],['1/2',2],['1/4',4],['1/8',8],['1/16',16],['1/32',32]];
+    const ms=n=>240000/b/n;const fm=x=>x>=100?f2(x,1):f2(x,2);const fh=x=>x>=10?f2(x,2):f2(x,3);
+    const cols='4.2rem repeat(3,minmax(0,1fr))',al=['l','r','r','r'];
+    return{kind:'report',title:`${b} BPM`,sub:'4/4 · dotted = ×1.5 · triplet = ×⅔',sections:[
+      {title:'One beat',note:'',isHead:true,big:`${fm(ms(4))} ms`,cap:`1/4 note  ·  ${fh(1000/ms(4))} Hz`},
+      this.table('Delay times','milliseconds',cols,al,['Division','Straight','Dotted','Triplet'],div.map(([l,n])=>[l,fm(ms(n)),fm(ms(n)*1.5),fm(ms(n)*2/3)]),4),
+      this.table('LFO rates','hertz · one cycle per division',cols,al,['Division','Straight','Dotted','Triplet'],div.map(([l,n])=>[l,fh(1000/ms(n)),fh(1000/(ms(n)*1.5)),fh(1000/(ms(n)*2/3))]),4)]};
+  }
+  scaleReport(v){
+    const t=KEYS.indexOf(v.key),s=v.scale,S=SCALES[s],fl=flats(t,s),pcs=S.iv.map(i=>t+i),names=pcs.map(p=>nn(p,fl)),N=pcs.length;
+    const noteRows=S.iv.map((iv,i)=>{const m=60+t+iv;return[String(i+1),names[i]+(Math.floor(m/12)-1),String(m),f2(440*Math.pow(2,(m-69)/12),2)];});
+    const Q={'4,7':['major',''],'3,7':['minor','m'],'3,6':['diminished','°'],'4,8':['augmented','+'],'5,7':['sus4','sus4'],'2,7':['sus2','sus2']};
+    const chordRows=pcs.map((p,i)=>{const a=(S.iv[(i+(N===7?2:1))%N]-S.iv[i]+12)%12,b=(S.iv[(i+(N===7?4:2))%N]-S.iv[i]+12)%12;const q=Q[a+','+b]||['open','5'];let num=N===7?ROM[i]:String(i+1);if(N===7&&(q[0]==='minor'||q[0]==='diminished'))num=num.toLowerCase();if(q[0]==='diminished')num+='°';if(q[0]==='augmented')num+='+';const tones=[i,(i+(N===7?2:1))%N,(i+(N===7?4:2))%N].map(k=>names[k]).join(' ');return[num,names[i]+q[1],tones,q[0]];});
+    let modes;
+    if(N===7)modes=names.map((nm,k)=>({k:`Degree ${k+1}`,v:`${nm} ${MODES[(S.m+k)%7]}`,n:k===0?'this scale':''}));
+    else modes=[{k:'Degree 1',v:`${names[0]} minor pentatonic`,n:'this scale'},{k:'Degree 2',v:`${names[1]} major pentatonic`,n:'same five notes'}];
+    return{kind:'report',title:`${names[0]} ${s}`,sub:`${N} notes · octave 4 · A4 = 440 Hz`,sections:[
+      {title:'Scale',note:'',isHead:true,big:`${names[0]} ${s}`,cap:names.join('  ')},
+      this.table('Notes','',  '3.6rem 3.6rem minmax(0,1fr) minmax(0,1fr)',['l','l','r','r'],['Degree','Note','MIDI','Hz'],noteRows,0),
+      this.table('Chords on each degree',N===7?'triads':'stacked from the five notes','3.6rem 4.6rem minmax(0,1fr) minmax(0,1fr)',['l','l','l','r'],['Degree','Chord','Notes','Quality'],chordRows,-1),
+      {title:'Related modes',note:'same notes, different home',isKv:true,kv:modes}]};
+  }
+  reportText(rep){
+    const L=[rep.title.toUpperCase(),rep.sub,''];
+    rep.sections.forEach(sec=>{L.push(`— ${sec.title} —`);if(sec.isHead)L.push(sec.big,sec.cap);if(sec.isKv)sec.kv.forEach(r=>L.push(`${r.k.padEnd(16)} ${r.v}${r.n?'  ('+r.n+')':''}`));if(sec.isTable)sec.plain.forEach(row=>L.push(row.map((c,i)=>i?String(c).padStart(12):String(c).padEnd(10)).join('')));if(sec.isBars)sec.bars.forEach(b=>L.push(`${b.label.padEnd(4)} ${'█'.repeat(Number(b.count)/2|0)} ${b.count}`));L.push('');});
+    return L.join('\n');
+  }
+  band(i){return React.createElement('div',{key:i,style:{position:'absolute',inset:0,overflow:'hidden',pointerEvents:'none'}},React.createElement('div',{style:{position:'absolute',top:0,bottom:0,left:0,width:'40%',background:'linear-gradient(90deg,transparent,var(--accent-soft),transparent)',animation:`bl-drift 2.6s ${i*0.25}s ease-in-out infinite`}}));}
+  fieldView(f,v,errors){
+    const err=errors[f.id]||'';
+    const o={label:f.label,hint:f.hint||'',showLabel:f.type!=='toggle',error:err,hasError:!!err,colStyle:{gridColumn:f.half?'span 1':'1 / -1',minWidth:0,display:'flex',flexDirection:'column',gap:9}};
+    o['is'+cap(f.type)]=true;
+    if(f.type==='select'){o.value=v[f.id];o.optionEls=f.opts.map(x=>React.createElement('option',{key:x.v,value:x.v},x.l));o.onChange=e=>this.setVal(f.id,e.target.value);o.boxStyle=boxSt(err);}
+    if(f.type==='number'){o.value=String(v[f.id]);o.unit=f.unit;o.onInput=e=>this.setVal(f.id,e.target.value.replace(/[^\d.\-]/g,''));o.dec=()=>this.step(f,-1);o.inc=()=>this.step(f,1);o.boxStyle=boxSt(err);}
+    if(f.type==='text'){o.value=v[f.id];o.ph=f.ph;o.onInput=e=>this.setVal(f.id,e.target.value);o.boxStyle=boxSt(err);}
+    if(f.type==='multi')o.options=f.opts.map(x=>{const on=v[f.id].includes(x.v);return{label:x.l,sub:x.s,check:on?'✓':'',toggle:()=>this.toggleMulti(f.id,x.v),style:cardSt(on,err),boxStyle:checkSt(on)};});
+    if(f.type==='toggle'){const on=!!v[f.id];o.sub=f.s;o.toggle=()=>this.setVal(f.id,!on);o.trackStyle={position:'relative',width:40,height:24,flex:'none',borderRadius:24,background:on?'var(--accent)':'var(--line)',transition:'background .2s'};o.knobStyle={position:'absolute',top:3,left:on?19:3,width:18,height:18,borderRadius:18,background:on?'var(--accent-ink)':'var(--text-2)',transition:'left .2s'};}
+    return o;
+  }
+  renderVals(){
+    const s=this.state,mob=!!this.props.mobile,tool=s.tool,T=tool?TB[tool]:null,v=tool?s.vals[tool]:null;
+    const run=tool?(s.runs[tool]||{phase:'idle'}):{phase:'idle'};
+    const live=!!(T&&T.live);
+    const errors=tool?{...this.liveErrors(tool,v),...(s.errs[tool]||{})}:{};
+    const hasErrs=Object.keys(errors).length>0;
+    let phase=run.phase;if(phase==='error'&&!hasErrs)phase=run.result?'done':'idle';
+    let result=live?(hasErrs?null:this.compute(tool,v,s.file,1)):run.result;
+    const showResult=live?!hasErrs:phase==='done'&&result;
+    const groups=GROUPS.map(g=>({label:g.label,sub:g.sub,tools:TOOLS.filter(t=>t.group===g.label).map(t=>{const sel=t.id===tool;return{name:t.name,blurb:t.blurb,out:t.out,select:()=>this.setState({tool:t.id,menuOpen:false}),
+      railStyle:{all:'unset',boxSizing:'border-box',cursor:'pointer',display:'flex',alignItems:'center',gap:10,height:38,padding:'0 10px',borderRadius:9,font:'500 14px var(--sans)',color:sel?'var(--text)':'var(--text-2)',background:sel?'var(--raised)':'transparent',boxShadow:sel?'inset 0 0 0 1px var(--line-soft)':'none'},
+      mobileStyle:{all:'unset',boxSizing:'border-box',cursor:'pointer',display:'flex',alignItems:'center',gap:12,minHeight:48,padding:'0 12px',borderRadius:10,font:'500 15px var(--sans)',color:sel?'var(--text)':'var(--text-2)',background:sel?'var(--raised)':'transparent'},
+      dotStyle:{width:6,height:6,borderRadius:6,flex:'none',background:sel?'var(--accent)':'var(--line)',boxShadow:sel?'0 0 0 3px var(--accent-soft)':'none'}};})}));
+    const out={rootRef:this.rootRef,resultRef:this.resultRef,groups,isDesktop:!mob,isMobile:mob,
+      rootStyle:{...THEMES[s.theme],...FONTS,position:'relative',display:'flex',flexDirection:mob?'column':'row',height:'100%',width:'100%',boxSizing:'border-box',overflowX:'hidden',overflowY:mob?'auto':'hidden',background:'radial-gradient(1100px 520px at 88% -12%, var(--glow), transparent 62%), var(--bg)',color:'var(--text)',fontFamily:'var(--sans)',WebkitFontSmoothing:'antialiased'},
+      mainStyle:mob?{display:'flex',flexDirection:'column'}:{flex:1,minWidth:0,minHeight:0,display:'flex',flexDirection:'column',overflowY:tool?'hidden':'auto'},
+      goHome:()=>this.setState({tool:null}),setDark:()=>this.setState({theme:'dark'}),setLight:()=>this.setState({theme:'light'}),
+      darkBtnStyle:segSt(s.theme==='dark'),lightBtnStyle:segSt(s.theme==='light'),
+      toggleTheme:()=>this.setState({theme:s.theme==='dark'?'light':'dark'}),themeLabel:s.theme==='dark'?'Light mode':'Dark mode',
+      showMobileIntro:mob&&!tool,menuOpen:mob&&(s.menuOpen||!tool),toggleMenu:()=>this.setState({menuOpen:!s.menuOpen}),
+      pickerGroup:T?T.group:'Tool',pickerName:T?T.name:'Choose a tool',menuGlyph:s.menuOpen||!tool?'close':'change',
+      showWelcome:!tool&&!mob,hasTool:!!tool};
+    if(!tool)return out;
+    Object.assign(out,{toolGroup:T.group,toolName:T.name,toolBlurb:T.blurb,toolOutLong:T.outLong,isLive:live,showRunBar:!live,
+      titleStyle:{font:`300 ${mob?30:38}px/1.05 var(--serif)`,letterSpacing:'-0.01em',color:'var(--text)'},
+      headerStyle:mob?{padding:'24px 18px 20px',display:'flex',flexDirection:'column',gap:12}:{padding:'30px 40px 24px',display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:24,flexWrap:'wrap'},
+      wsStyle:mob?{display:'flex',flexDirection:'column',gap:18,padding:'0 18px 28px'}:{flex:1,minHeight:0,display:'flex',gap:28,padding:'0 40px 28px'},
+      settingsColStyle:mob?{display:'flex',flexDirection:'column'}:{width:396,flex:'none',display:'flex',flexDirection:'column',minHeight:0},
+      settingsScrollStyle:mob?{paddingBottom:8}:{flex:1,minHeight:0,overflowY:'auto',padding:'4px 10px 26px 2px',margin:'0 -10px 0 -2px'},
+      runBarStyle:mob?{position:'sticky',bottom:0,zIndex:2,padding:'22px 0 14px',marginTop:4,background:'linear-gradient(to bottom, transparent, var(--bg) 30%)',display:'flex',flexDirection:'column',gap:10}:{flex:'none',paddingTop:16,borderTop:'1px solid var(--line-soft)',display:'flex',flexDirection:'column',gap:10},
+      resultColStyle:mob?{background:'var(--sunk)',border:'1px solid var(--line-soft)',borderRadius:16,padding:'20px 18px 24px',display:'flex',flexDirection:'column',scrollMarginTop:16}:{flex:1,minWidth:0,minHeight:0,overflowY:'auto',background:'var(--sunk)',border:'1px solid var(--line-soft)',borderRadius:18,padding:'24px 30px 32px',display:'flex',flexDirection:'column',boxSizing:'border-box'},
+      fields:(SCHEMA[tool]||[]).map(f=>this.fieldView(f,v,errors))});
+    if(tool==='ambient'){
+      const P=v.progMode==='preset'?parseProg(PRESETS.find(p=>p.id===v.preset).prog):parseProg(v.progText);
+      const t=KEYS.indexOf(v.key);const n=P.items.length,cyc=n*Number(v.bpc);
+      out.prog={modes:['preset','numerals','random'].map(m=>({label:cap(m),select:()=>this.setVal('progMode',m),style:segSt(v.progMode===m)})),
+        isPreset:v.progMode==='preset',isNumerals:v.progMode==='numerals',isRandom:v.progMode==='random',
+        presets:PRESETS.map(p=>({name:p.id,prog:p.prog.replace(/-/g,' '),select:()=>this.setVal('preset',p.id),style:{all:'unset',boxSizing:'border-box',cursor:'pointer',display:'flex',flexDirection:'column',gap:7,padding:'11px 12px',borderRadius:11,background:v.preset===p.id?'var(--accent-soft)':'var(--raised)',border:`1px solid ${v.preset===p.id?'var(--accent-line)':'var(--line-soft)'}`}})),
+        text:v.progText,onInput:e=>this.setVal('progText',e.target.value),boxStyle:boxSt(errors.progression),
+        showResolved:v.progMode!=='random'&&n>0,
+        chords:P.items.map(c=>({name:c.ok?chordName(c,t,v.scale):'?',num:c.tok,style:{display:'flex',alignItems:'baseline',gap:6,padding:'7px 10px',borderRadius:8,color:c.ok?'var(--text)':'var(--err)',background:c.ok?'var(--raised)':'var(--err-soft)',border:`1px solid ${c.ok?'var(--line-soft)':'var(--err)'}`}})),
+        cycleNote:P.error?'':`${v.bpc} bars each · loops every ${cyc} bars`};
+    }
+    if(tool==='mutate'){
+      const tf=v.tf,err=errors.tf;
+      out.tf={listStyle:{display:'flex',flexDirection:'column',borderRadius:12,border:`1px solid ${err?'var(--err)':'var(--line-soft)'}`,boxShadow:err?'0 0 0 3px var(--err-soft)':'none',background:'var(--raised)'},
+        orderNote:TF.filter(x=>tf[x.id].on).length?'applied in order: '+TF.filter(x=>tf[x.id].on).map(x=>x.l.toLowerCase()).join(' → '):'nothing selected',
+        rows:TF.map((x,i)=>{const st=tf[x.id],on=st.on;const vt=x.id==='transpose'?`${st.v>0?'+':st.v<0?'−':''}${Math.abs(st.v)}`:x.kind==='num'?`×${st.v}`:x.kind==='slider'?f2(st.v,2):'';
+          return{label:x.l,sub:x.s,check:on?'✓':'',boxStyle:checkSt(on),toggle:()=>this.setTf(x.id,{on:!on}),
+            rowStyle:{display:'flex',alignItems:'center',gap:12,padding:'7px 12px 7px 14px',minHeight:58,borderTop:i?'1px solid var(--line-soft)':'none',boxSizing:'border-box'},
+            showNum:on&&x.kind==='num',showSlider:on&&x.kind==='slider',showState:!on||x.kind==='none',stateText:on?'on':'off',stateStyle:{font:'400 12px var(--mono)',color:on?'var(--accent)':'var(--text-3)',paddingRight:6},
+            valText:vt,v:st.v,dec:()=>this.setTf(x.id,{v:Math.max(x.min,+(st.v-x.step).toFixed(2))}),inc:()=>this.setTf(x.id,{v:Math.min(x.max,+(st.v+x.step).toFixed(2))}),
+            onInput:e=>this.setTf(x.id,{v:parseFloat(e.target.value)}),
+            fillStyle:{position:'absolute',left:0,width:(st.v||0)*100+'%',height:4,borderRadius:4,background:'var(--accent)'},
+            knobStyle:{position:'absolute',left:`calc(${(st.v||0)*100}% - 8px)`,width:16,height:16,borderRadius:16,background:'var(--text)',boxShadow:'0 0 0 4px var(--accent-soft)',pointerEvents:'none'}};})};
+    }
+    if(tool==='mutate'||tool==='analyze'){
+      const fe=errors.file,file=s.file;
+      const dz=e=>{e.preventDefault();if(!s.drag)this.setState({drag:true});};
+      out.fileView={isEmpty:!file,isFilled:!!file,name:file?file.name:'',meta:file?file.meta:'',
+        onDragOver:dz,onDragLeave:()=>this.setState({drag:false}),onDrop:e=>{e.preventDefault();this.acceptFile(e.dataTransfer.files[0]);},
+        onPick:e=>this.acceptFile(e.target.files[0]),loadSample:()=>this.setState(st=>{const errs={...st.errs};['mutate','analyze'].forEach(t=>{const x={...(errs[t]||{})};delete x.file;errs[t]=x;});return{file:{...SAMPLE},errs};}),
+        remove:()=>this.setState({file:null}),
+        zoneStyle:{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,minHeight:128,padding:20,borderRadius:14,cursor:'pointer',textAlign:'center',border:`1.5px dashed ${fe?'var(--err)':s.drag?'var(--accent)':'var(--line)'}`,background:s.drag?'var(--accent-soft)':fe?'var(--err-soft)':'transparent',boxSizing:'border-box',transition:'background .2s, border-color .2s'},
+        cardStyle:{display:'flex',alignItems:'center',gap:12,minHeight:66,padding:'10px 8px 10px 10px',borderRadius:14,background:s.drag?'var(--accent-soft)':'var(--raised)',border:`1px solid ${fe?'var(--err)':s.drag?'var(--accent)':'var(--line)'}`,boxShadow:fe?'0 0 0 3px var(--err-soft)':'none',boxSizing:'border-box'},
+        thumbStyle:{width:44,height:44,flex:'none',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',font:'500 10px var(--mono)',letterSpacing:'0.06em',color:fe?'var(--err)':'var(--accent)',background:fe?'var(--err-soft)':'var(--accent-soft)'},
+        thumbText:file?(file.bad?(file.name.split('.').pop()||'?').toUpperCase().slice(0,4):'MIDI'):''};
+    }
+    const busy=phase==='running';
+    Object.assign(out,{run:this.run,reset:()=>this.setState(st=>({vals:{...st.vals,[tool]:JSON.parse(JSON.stringify(DEF[tool]))},errs:{...st.errs,[tool]:{}}})),
+      runLabel:busy?`${T.busy}…`:T.verb,runKbd:mob?'':busy?'':'⌘ ↵',runShimmer:busy?this.band(0):null,
+      runBtnStyle:{all:'unset',boxSizing:'border-box',position:'relative',overflow:'hidden',cursor:busy?'default':'pointer',display:'flex',alignItems:'center',justifyContent:'space-between',height:52,padding:'0 20px',borderRadius:13,font:'600 15px var(--sans)',background:busy?'var(--accent-soft)':'var(--accent)',color:busy?'var(--accent)':'var(--accent-ink)',border:busy?'1px solid var(--accent-line)':'1px solid var(--accent)'},
+      runHint:phase==='done'?'Settings kept — change one and run again':'Defaults are ready to run',
+      panelLabel:live?'Reference':'Result',runMeta:live?'live':busy?`run ${run.n}`:phase==='done'?`run ${run.n} · ${run.ms} s`:'',
+      showIdle:!live&&phase==='idle',showRunning:busy,showErrorSum:hasErrs&&(live||phase==='error'),
+      idleTitle:tool==='mutate'||tool==='analyze'?(s.file&&!s.file.bad?`${s.file.name} is ready.`:'Bring a MIDI file.'):'Nothing generated yet.',
+      idleBody:{ambient:'Run with the defaults or change a setting first. Your clips arrive here as one .zip, listed file by file.',drums:'Run it and your drum clips arrive here as one .zip.',mutate:'Choose transforms, then run. You get one new .mid back; the original is never changed.',analyze:'Run it to read tempo, length, notes, velocity and a best guess at the key.'}[tool]||'',
+      runningTitle:{ambient:`Layering ${v.parts?v.parts.length:4} clips…`,drums:'Placing hits…',mutate:'Applying transforms…',analyze:`Reading ${s.file?s.file.name:'file'}…`}[tool]||'',
+      runningSub:'Usually a second or two. Your settings stay as they are.',
+      skeletons:Array.from({length:tool==='ambient'?Math.max(1,v.parts.length):tool==='drums'?2:1},(_,i)=>({band:this.band(i)})),
+      errKicker:live?'Check settings':"Didn't run",errTitle:Object.keys(errors).length>1?`${Object.keys(errors).length} settings need a look.`:'One setting needs a look.',
+      errList:Object.entries(errors).map(([k,m])=>({label:LABELS[k]||k,msg:m})),
+      showZip:!!(showResult&&result&&result.kind==='zip'),showSingle:!!(showResult&&result&&result.kind==='single'),showReport:!!(showResult&&result&&result.kind==='report')});
+    if(result&&result.kind==='zip'){const locked=String(v.seed)===String(result.seed);out.zip={...result,summary:[...result.summary,`seed ${result.seed}`],reuseLabel:locked?'seed locked':'reuse seed',reuseSeed:()=>this.setVal('seed',locked?'':String(result.seed)),reuseStyle:{all:'unset',cursor:'pointer',font:'500 11.5px/1 var(--mono)',padding:'6px 10px',borderRadius:999,color:locked?'var(--accent-ink)':'var(--accent)',background:locked?'var(--accent)':'var(--accent-soft)'}};}
+    if(result&&result.kind==='single')out.single=result;
+    if(result&&result.kind==='report'){out.rep=result;out.copyLabel=s.copied?'Copied':'Copy as text';out.copyReport=()=>{try{navigator.clipboard.writeText(this.reportText(result));}catch(e){}this.setState({copied:true});setTimeout(()=>this.setState({copied:false}),1500);};}
+    return out;
+  }
+}
+</script>
+</body>
+</html>
