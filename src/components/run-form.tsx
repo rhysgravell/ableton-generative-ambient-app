@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { ScriptDef } from "@/lib/scripts";
+import type { ScriptDef, ScriptOption } from "@/lib/scripts";
 
 type Result =
-  | { kind: "file"; url: string; name: string }
+  | { kind: "file"; url: string; name: string; contents: string[] }
   | { kind: "text"; log: string }
   | { kind: "error"; message: string };
 
@@ -31,7 +31,8 @@ export function RunForm({ scripts }: { scripts: ScriptDef[] }) {
         setResult({ kind: "text", log: (await res.json()).log });
       } else {
         const name = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? "output.mid";
-        setResult({ kind: "file", url: URL.createObjectURL(await res.blob()), name });
+        const contents = res.headers.get("X-Zip-Contents")?.split(",") ?? [];
+        setResult({ kind: "file", url: URL.createObjectURL(await res.blob()), name, contents });
       }
     } catch (err) {
       setResult({ kind: "error", message: (err as Error).message });
@@ -62,32 +63,18 @@ export function RunForm({ scripts }: { scripts: ScriptDef[] }) {
         <span className="block text-xs text-zinc-500">{script.description}</span>
       </label>
 
-      <label className="block space-y-1">
-        <span className="text-sm font-medium">MIDI file</span>
-        <input type="file" name="file" accept=".mid,.midi" required className={inputClass} />
-      </label>
+      {script.input && (
+        <label className="block space-y-1">
+          <span className="text-sm font-medium">MIDI file</span>
+          <input type="file" name="file" accept=".mid,.midi" required className={inputClass} />
+        </label>
+      )}
 
       {/* key resets field values when switching scripts */}
       <fieldset key={script.id} className="grid gap-4 sm:grid-cols-2">
-        {script.options.map((opt) =>
-          opt.kind === "boolean" ? (
-            <label key={opt.name} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name={opt.name} />
-              {opt.label}
-            </label>
-          ) : (
-            <label key={opt.name} className="block space-y-1">
-              <span className="text-sm">{opt.label}</span>
-              <input
-                type="number"
-                name={opt.name}
-                step={opt.step ?? "any"}
-                placeholder={opt.placeholder}
-                className={inputClass}
-              />
-            </label>
-          ),
-        )}
+        {script.options.map((opt) => (
+          <OptionField key={opt.name} opt={opt} />
+        ))}
       </fieldset>
 
       <button
@@ -109,10 +96,69 @@ export function RunForm({ scripts }: { scripts: ScriptDef[] }) {
         </pre>
       )}
       {result?.kind === "file" && (
-        <a href={result.url} download={result.name} className="block text-sm font-medium underline">
-          Download {result.name}
-        </a>
+        <div className="space-y-2 text-sm">
+          <a href={result.url} download={result.name} className="block font-medium underline">
+            Download {result.name}
+          </a>
+          {result.contents.length > 0 && (
+            <ul className="list-inside list-disc font-mono text-xs text-zinc-500">
+              {result.contents.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </form>
   );
+}
+
+function OptionField({ opt }: { opt: ScriptOption }) {
+  switch (opt.kind) {
+    case "boolean":
+      return (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name={opt.name} />
+          {opt.label}
+        </label>
+      );
+    case "multi":
+      return (
+        <fieldset className="space-y-1 sm:col-span-2">
+          <legend className="text-sm">{opt.label}</legend>
+          <div className="flex flex-wrap gap-4">
+            {opt.choices.map((choice) => (
+              <label key={choice} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name={opt.name} value={choice} />
+                {choice}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      );
+    case "select":
+      return (
+        <label className="block space-y-1">
+          <span className="text-sm">{opt.label}</span>
+          <select name={opt.name} defaultValue={opt.default} className={inputClass}>
+            {opt.choices.map((choice) => (
+              <option key={choice}>{choice}</option>
+            ))}
+          </select>
+        </label>
+      );
+    default:
+      return (
+        <label className="block space-y-1">
+          <span className="text-sm">{opt.label}</span>
+          <input
+            type={opt.kind}
+            name={opt.name}
+            step={opt.kind === "number" ? (opt.step ?? "any") : undefined}
+            placeholder={opt.placeholder}
+            className={inputClass}
+          />
+        </label>
+      );
+  }
 }
