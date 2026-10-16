@@ -1,6 +1,6 @@
 # Python scripts
 
-Copied from [ableton-generative-ambient](https://github.com/rhysgravell/ableton-generative-ambient) at `15818d5` (`midi/` and `tools/`, unmodified). The app runs these via `/api/run`.
+Copied from [ableton-generative-ambient](https://github.com/rhysgravell/ableton-generative-ambient) at `15818d5` (`midi/` and `tools/`, unmodified). The app runs these via `/api/run`. `app/` holds the app's own helper (`midi_json.py`), which isn't part of the copied scripts.
 
 When the source scripts change, re-copy them:
 
