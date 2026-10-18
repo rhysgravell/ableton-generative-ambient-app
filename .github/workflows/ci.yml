@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: python/requirements.txt
+
+      - run: npm ci
+      - run: pip install -r python/requirements.txt
+
+      - name: Lint
+        run: npm run lint
+      - name: Type-check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+
+      - name: Python scripts compile
+        run: python -m compileall -q python
+      - name: MIDI helper smoke test
+        run: python python/app/midi_json.py analyze public/samples/night_pads_v2.mid
