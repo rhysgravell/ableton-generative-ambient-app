@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { THEME_COLOR } from "@/lib/theme-color";
 
 // Self-hosted (Fontsource, latin subset) so builds need no network access.
 const newsreader = localFont({
@@ -29,11 +30,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#15181c",
+  themeColor: THEME_COLOR.dark,
 };
 
 // Apply the saved theme before first paint so there's no flash.
-const themeScript = `try{var t=localStorage.getItem("bl-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem("bl-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=${JSON.stringify(THEME_COLOR)}[t]}}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
