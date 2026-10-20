@@ -1,5 +1,5 @@
 // Tool registry. Each tool is data: adding a script means adding an entry here
-// (plus a command in src/lib/server/commands.ts), and a custom field type only when truly bespoke.
+// (plus a case in handle() in src/app/api/run/route.ts), and a custom field type only when truly bespoke.
 
 import { KEYS, SCALE_NAMES } from "./theory";
 

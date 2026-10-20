@@ -71,7 +71,7 @@ export function Rail({ tool, onSelect, onHome }: { tool: ToolId | null; onSelect
           value={theme}
           onChange={setTheme}
         />
-        <div className="px-1.5 font-mono text-[10.5px] leading-normal text-text-3">6 scripts · standard MIDI out</div>
+        <div className="px-1.5 font-mono text-[10.5px] leading-normal text-text-3">7 tools · standard MIDI out</div>
       </div>
     </aside>
   );

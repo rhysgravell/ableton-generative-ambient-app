@@ -3,7 +3,7 @@
 import type { Clip, KeyChange, Roll, RunResponse } from "./api-types";
 import { analysisReport, barsLabel, type Report } from "./reports";
 import { keyIndex, noteName, parseProg, prettyNote, PRESETS, prefersFlats, type Scale } from "./theory";
-import { TRANSFORM_ORDER, type ToolId, type TransformState, type Values } from "./tools";
+import { DETECT, TRANSFORM_ORDER, type ToolId, type TransformState, type Values } from "./tools";
 
 /** A piano-roll note: fractions of the roll's width, a row out of R rows, opacity from velocity. */
 export type RollNote = { l: number; w: number; row: number; R: number; op: number };
@@ -73,11 +73,19 @@ const clipMeta = (c: Clip, bars: number, unit: string) => `${plural(bars, "bar")
 
 const semitones = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)} st`;
 
-function keyOps({ from, to, shift }: KeyChange) {
+/** Which half of the source key was read from the notes, if any. */
+function detectedLabel(v: Values) {
+  const key = v.fromKey === DETECT;
+  const scale = v.fromScale === DETECT;
+  return key && scale ? "detected" : key ? "key detected" : scale ? "scale detected" : null;
+}
+
+function keyOps({ from, to, shift }: KeyChange, v: Values) {
   const name = (k: { key: string; scale: string }) => `${prettyNote(k.key)} ${k.scale}`;
+  const detected = detectedLabel(v);
   return [
     `${name(from)} → ${name(to)}`,
-    from.detected ? `detected · ${Math.round(from.score * 100)}% in scale` : "source set by you",
+    detected ? `${detected} · ${Math.round(from.score * 100)}% in scale` : "source set by you",
     from.scale === to.scale ? `transpose ${semitones(shift)}` : `root ${semitones(shift)} · by scale degree`,
   ];
 }
@@ -103,7 +111,7 @@ export function toResult(tool: ToolId, v: Values, res: RunResponse): Result {
       kind: "single",
       name: res.name,
       meta: `${barsLabel(res.after.totalBeats)} bars · ${plural(res.after.noteCount, "note")} · ${formatBytes(res.bytes)}`,
-      ops: res.keyChange ? keyOps(res.keyChange) : transformOps(v.tf as TransformState),
+      ops: res.keyChange ? keyOps(res.keyChange, v) : transformOps(v.tf as TransformState),
       label: res.keyChange ? "new key" : "mutated",
       ghost: rollNotes(res.before, span, range, 16),
       notes: rollNotes(res.after, span, range, 16),

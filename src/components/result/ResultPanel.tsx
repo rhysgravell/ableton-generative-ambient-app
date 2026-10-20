@@ -26,8 +26,10 @@ function idleTitle(tool: Tool, file: LoadedFile | null) {
 
 function runningTitle(tool: Tool, v: Values, file: LoadedFile | null) {
   switch (tool.id) {
-    case "ambient":
-      return `Layering ${(v.parts as string[]).length} clips…`;
+    case "ambient": {
+      const n = (v.parts as string[]).length;
+      return `Layering ${n} clip${n === 1 ? "" : "s"}…`;
+    }
     case "drums":
       return "Placing hits…";
     case "mutate":
