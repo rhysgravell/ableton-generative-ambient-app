@@ -18,6 +18,7 @@ describe("liveErrors", () => {
     expect(liveErrors("ambient", ambient(), null)).toEqual({});
     expect(liveErrors("drums", cloneDefaults("drums"), null)).toEqual({});
     expect(liveErrors("mutate", cloneDefaults("mutate"), midi)).toEqual({});
+    expect(liveErrors("rekey", cloneDefaults("rekey"), midi)).toEqual({});
   });
 
   it("checks number ranges", () => {
@@ -58,9 +59,16 @@ describe("validate", () => {
     expect(validate("drums", { ...cloneDefaults("drums"), patterns: [] }, null).patterns).toBeDefined();
   });
 
-  it("needs a file for mutate and analyze", () => {
-    expect(validate("mutate", cloneDefaults("mutate"), null).file).toBe("Add a MIDI file first.");
-    expect(validate("analyze", cloneDefaults("analyze"), null).file).toBe("Add a MIDI file first.");
+  it("needs a file for every file tool", () => {
+    for (const tool of ["mutate", "rekey", "analyze"] as const) {
+      expect(validate(tool, cloneDefaults(tool), null).file).toBe("Add a MIDI file first.");
+    }
+  });
+
+  it("won't change a key into itself", () => {
+    const v = { ...cloneDefaults("rekey"), fromKey: "G", fromScale: "minor" };
+    expect(validate("rekey", v, midi).key).toBe("The file is already in G minor. Pick a different key or scale to move to.");
+    expect(validate("rekey", { ...v, fromScale: "major" }, midi)).toEqual({});
   });
 
   it("needs at least one transform on", () => {

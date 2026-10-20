@@ -3,15 +3,16 @@
 
 import { KEYS, SCALE_NAMES } from "./theory";
 
-export type ToolId = "ambient" | "drums" | "mutate" | "analyze" | "bpmsync" | "scales";
+export type ToolId = "ambient" | "drums" | "mutate" | "rekey" | "analyze" | "bpmsync" | "scales";
 export type Group = "Generate" | "Transform" | "Reference";
 export type Option = { v: string; l: string; s?: string };
 
 type Base = { id: string; label: string; hint?: string; half?: boolean };
 export type NumberField = Base & { type: "number"; unit: string; min: number; max: number; step: number };
+export type SelectField = Base & { type: "select"; opts: Option[] };
 export type SliderField = Base & { type: "slider"; min: number; max: number; step: number };
 export type Field =
-  | (Base & { type: "select"; opts: Option[] })
+  | SelectField
   | NumberField
   | SliderField
   | (Base & { type: "text"; ph?: string })
@@ -48,14 +49,17 @@ export const GROUPS: { label: Group; sub: string }[] = [
 
 const bpm: NumberField = { id: "bpm", type: "number", label: "Tempo", unit: "BPM", min: 20, max: 300, step: 1, half: true };
 const bars: NumberField = { id: "bars", type: "number", label: "Length", unit: "bars", min: 1, max: 256, step: 1, half: true };
-const key: Field = { id: "key", type: "select", label: "Key", opts: KEYS.map((k) => ({ v: k, l: k })), half: true };
-const scale: Field = {
+const key: SelectField = { id: "key", type: "select", label: "Key", opts: KEYS.map((k) => ({ v: k, l: k })), half: true };
+const scale: SelectField = {
   id: "scale",
   type: "select",
   label: "Scale",
   opts: SCALE_NAMES.map((s) => ({ v: s, l: s[0].toUpperCase() + s.slice(1) })),
   half: true,
 };
+/** Change key's source: a key or scale, or "auto" to detect it from the notes. */
+export const DETECT = "auto";
+const detectOpt: Option = { v: DETECT, l: "Detect" };
 const seed: Field = { id: "seed", type: "text", label: "Seed", hint: "optional", ph: "random", half: true };
 
 /** Mutate's transforms, listed in UI order. */
@@ -169,6 +173,24 @@ export const TOOLS: Tool[] = [
     },
   },
   {
+    id: "rekey",
+    group: "Transform",
+    name: "Change key",
+    blurb: "Move a MIDI file into another key and scale. Each note keeps its place in the scale, so major to minor sounds written that way.",
+    out: ".mid",
+    outLong: "one .mid file",
+    verb: "Change key",
+    busy: "Changing key",
+    fields: [
+      { id: "file", type: "file", label: "MIDI file" },
+      { ...key, id: "fromKey", label: "From key", opts: [detectOpt, ...key.opts] },
+      { ...scale, id: "fromScale", label: "From scale", opts: [detectOpt, ...scale.opts] },
+      { ...key, label: "To key" },
+      { ...scale, label: "To scale" },
+    ],
+    defaults: { fromKey: DETECT, fromScale: DETECT, key: "G", scale: "minor" },
+  },
+  {
     id: "analyze",
     group: "Transform",
     name: "Analyze",
@@ -209,6 +231,9 @@ export const TOOLS: Tool[] = [
 
 export const TOOL_BY_ID = Object.fromEntries(TOOLS.map((t) => [t.id, t])) as Record<ToolId, Tool>;
 
+/** Tools that take an uploaded MIDI file (the file is shared between them). */
+export const usesFile = (id: ToolId) => TOOL_BY_ID[id].fields.some((f) => f.type === "file");
+
 export const isToolId = (id: string): id is ToolId => id in TOOL_BY_ID;
 
 /** Labels for the error summary, keyed by field id. */
@@ -224,6 +249,8 @@ export const FIELD_LABELS: Record<string, string> = {
   bpc: "Bars per chord",
   key: "Key",
   scale: "Scale",
+  fromKey: "From key",
+  fromScale: "From scale",
   script: "Script",
 };
 

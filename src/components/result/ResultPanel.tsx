@@ -1,5 +1,5 @@
 import type { Result } from "@/lib/results";
-import { FIELD_LABELS, type Tool, type Values } from "@/lib/tools";
+import { FIELD_LABELS, usesFile, type Tool, type Values } from "@/lib/tools";
 import type { Errors } from "@/lib/validate";
 import type { LoadedFile } from "../fields/FileField";
 import { Band } from "./Band";
@@ -14,11 +14,13 @@ const IDLE_BODY: Partial<Record<Tool["id"], string>> = {
   ambient: "Run with the defaults or change a setting first. Your clips arrive here as one .zip, listed file by file.",
   drums: "Run it and your drum clips arrive here as one .zip.",
   mutate: "Choose transforms, then run. You get one new .mid back; the original is never changed.",
+  rekey:
+    "Leave the source on Detect to read it from the notes, or set it if you know it — C major and A minor share every note, so detection can pick either. Same scale both sides is a straight transpose; a new scale moves each note to the matching degree.",
   analyze: "Run it to read tempo, length, notes, velocity and a best guess at the key.",
 };
 
 function idleTitle(tool: Tool, file: LoadedFile | null) {
-  if (tool.id !== "mutate" && tool.id !== "analyze") return "Nothing generated yet.";
+  if (!usesFile(tool.id)) return "Nothing generated yet.";
   return file && !file.bad ? `${file.name} is ready.` : "Bring a MIDI file.";
 }
 
@@ -30,6 +32,8 @@ function runningTitle(tool: Tool, v: Values, file: LoadedFile | null) {
       return "Placing hits…";
     case "mutate":
       return "Applying transforms…";
+    case "rekey":
+      return `Moving to ${v.key} ${v.scale}…`;
     default:
       return `Reading ${file?.name ?? "file"}…`;
   }

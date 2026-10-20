@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { runTool } from "@/lib/client";
 import { bpmReport, scaleReport } from "@/lib/reports";
 import { formatBytes, type Result } from "@/lib/results";
-import { cloneDefaults, TOOL_BY_ID, TOOLS, type ToolId, type Values } from "@/lib/tools";
+import { cloneDefaults, TOOL_BY_ID, TOOLS, usesFile, type ToolId, type Values } from "@/lib/tools";
 import { isMidiName, liveErrors, validate, type Errors } from "@/lib/validate";
 import { FieldRenderer, type FieldContext } from "./FieldRenderer";
 import type { LoadedFile } from "./fields/FileField";
@@ -17,7 +17,7 @@ import { Welcome } from "./shell/Welcome";
 type PerTool<T> = Partial<Record<ToolId, T>>;
 
 const SAMPLE = { path: "/samples/night_pads_v2.mid", name: "night_pads_v2.mid" };
-const FILE_TOOLS: ToolId[] = ["mutate", "analyze"];
+const FILE_TOOLS = TOOLS.map((t) => t.id).filter(usesFile);
 const PROGRESSION_KEYS = ["progMode", "progText", "preset", "scale"];
 
 const allDefaults = () => Object.fromEntries(TOOLS.map((t) => [t.id, cloneDefaults(t.id)])) as Record<ToolId, Values>;
@@ -104,7 +104,7 @@ export function Studio() {
     setErrs((s) => ({ ...s, [t]: {} }));
     setRuns((s) => ({ ...s, [t]: { ...prev, phase: "running", n } }));
     const started = performance.now();
-    const outcome = await runTool(t, v, FILE_TOOLS.includes(t) ? (file?.file ?? null) : null);
+    const outcome = await runTool(t, v, usesFile(t) ? (file?.file ?? null) : null);
     const ms = ((performance.now() - started) / 1000).toFixed(1);
 
     if (!outcome.ok) {

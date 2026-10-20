@@ -1,8 +1,8 @@
 // Turns /api/run responses into what the result components render.
 
-import type { Clip, Roll, RunResponse } from "./api-types";
+import type { Clip, KeyChange, Roll, RunResponse } from "./api-types";
 import { analysisReport, barsLabel, type Report } from "./reports";
-import { keyIndex, noteName, parseProg, PRESETS, prefersFlats, type Scale } from "./theory";
+import { keyIndex, noteName, parseProg, prettyNote, PRESETS, prefersFlats, type Scale } from "./theory";
 import { TRANSFORM_ORDER, type ToolId, type TransformState, type Values } from "./tools";
 
 /** A piano-roll note: fractions of the roll's width, a row out of R rows, opacity from velocity. */
@@ -23,6 +23,8 @@ export type SingleResult = {
   name: string;
   meta: string;
   ops: string[];
+  /** Legend name for the new notes. */
+  label: string;
   ghost: RollNote[];
   notes: RollNote[];
   url: string;
@@ -69,9 +71,20 @@ function progressionLabel(v: Values, fromScript: string | null) {
 
 const clipMeta = (c: Clip, bars: number, unit: string) => `${plural(bars, "bar")} · ${plural(c.noteCount, unit)}`;
 
+const semitones = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)} st`;
+
+function keyOps({ from, to, shift }: KeyChange) {
+  const name = (k: { key: string; scale: string }) => `${prettyNote(k.key)} ${k.scale}`;
+  return [
+    `${name(from)} → ${name(to)}`,
+    from.detected ? `detected · ${Math.round(from.score * 100)}% in scale` : "source set by you",
+    from.scale === to.scale ? `transpose ${semitones(shift)}` : `root ${semitones(shift)} · by scale degree`,
+  ];
+}
+
 function transformOps(tf: TransformState) {
   const label: Record<string, (v: number) => string> = {
-    transpose: (v) => `transpose ${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)} st`,
+    transpose: (v) => `transpose ${semitones(v)}`,
     humanize: (v) => `humanize ${v.toFixed(2)}`,
     reverse: () => "reverse",
     stretch: (v) => `stretch ×${v}`,
@@ -90,7 +103,8 @@ export function toResult(tool: ToolId, v: Values, res: RunResponse): Result {
       kind: "single",
       name: res.name,
       meta: `${barsLabel(res.after.totalBeats)} bars · ${plural(res.after.noteCount, "note")} · ${formatBytes(res.bytes)}`,
-      ops: transformOps(v.tf as TransformState),
+      ops: res.keyChange ? keyOps(res.keyChange) : transformOps(v.tf as TransformState),
+      label: res.keyChange ? "new key" : "mutated",
       ghost: rollNotes(res.before, span, range, 16),
       notes: rollNotes(res.after, span, range, 16),
       url: blobUrl(res.data, "audio/midi"),
