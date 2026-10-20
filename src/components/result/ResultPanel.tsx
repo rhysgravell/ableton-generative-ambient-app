@@ -122,7 +122,7 @@ export function ResultPanel({
           </div>
           {errorList.map(([k, msg]) => (
             <div key={k} className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)] gap-3.5 border-t border-line-soft py-[13px]">
-              <span className="font-sans text-[13px] font-medium leading-[1.45] text-text-2">{FIELD_LABELS[k] ?? k}</span>
+              <span className="font-sans text-[13px] font-medium leading-[1.45] text-text-2">{tool.fields.find((f) => f.id === k)?.label ?? FIELD_LABELS[k] ?? k}</span>
               <span className="font-sans text-[13.5px] leading-[1.45] text-text">{msg}</span>
             </div>
           ))}

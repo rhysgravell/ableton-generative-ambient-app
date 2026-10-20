@@ -26,7 +26,7 @@ const jetbrainsMono = localFont({
 
 export const metadata: Metadata = {
   title: "Buried Landscapes",
-  description: "Six tools for slow music — generate, reshape and read MIDI.",
+  description: "Seven tools for slow music — generate, reshape and read MIDI.",
 };
 
 export const viewport: Viewport = {

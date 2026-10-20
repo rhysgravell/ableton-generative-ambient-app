@@ -36,7 +36,7 @@ export function MobileTop({
 
       {!tool && (
         <div className="flex flex-col gap-2 px-[18px] pb-[18px] pt-1.5">
-          <h1 className="font-serif text-[30px] font-light leading-[1.1] text-pretty text-text">Six tools for slow music.</h1>
+          <h1 className="font-serif text-[30px] font-light leading-[1.1] text-pretty text-text">Seven tools for slow music.</h1>
           <p className="font-sans text-[14.5px] leading-[1.55] text-pretty text-text-2">
             Every tool starts from defaults — G minor, 80 BPM, 16 bars — so you can run it straight away.
           </p>

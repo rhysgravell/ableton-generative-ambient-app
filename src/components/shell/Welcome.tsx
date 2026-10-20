@@ -9,7 +9,7 @@ export function Welcome({ onSelect }: { onSelect: (id: ToolId) => void }) {
       <WaveBackground />
       <div className="relative flex max-w-[640px] flex-col gap-3.5">
         <h1 className="font-serif text-[54px] font-light leading-[1.04] tracking-[-0.015em] text-text">
-          Six tools for <span className="italic">slow music.</span>
+          Seven tools for <span className="italic">slow music.</span>
         </h1>
         <p className="max-w-[540px] font-sans text-base leading-[1.6] text-pretty text-text-2">
           Generate new MIDI from a few settings, reshape a file you already have, or look something up. Every tool starts from
