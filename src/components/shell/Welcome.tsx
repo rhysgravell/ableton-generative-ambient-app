@@ -1,10 +1,12 @@
+import { WaveBackground } from "@/components/WaveBackground";
 import { GROUPS, TOOLS, type ToolId } from "@/lib/tools";
 
-/** Desktop empty state: hero and a grid of tool cards over faint strata. */
+/** Desktop empty state: hero and a grid of translucent tool cards over faint strata and animated waves. */
 export function Welcome({ onSelect }: { onSelect: (id: ToolId) => void }) {
   return (
     <div className="relative hidden flex-1 flex-col justify-center gap-11 overflow-hidden px-16 py-14 md:flex">
       <div aria-hidden className="strata pointer-events-none absolute inset-x-0 bottom-0 h-[42%] opacity-80" />
+      <WaveBackground />
       <div className="relative flex max-w-[640px] flex-col gap-3.5">
         <h1 className="font-serif text-[54px] font-light leading-[1.04] tracking-[-0.015em] text-text">
           Six tools for <span className="italic">slow music.</span>
@@ -26,7 +28,7 @@ export function Welcome({ onSelect }: { onSelect: (id: ToolId) => void }) {
                 key={t.id}
                 type="button"
                 onClick={() => onSelect(t.id)}
-                className="flex min-h-[132px] cursor-pointer flex-col gap-2 rounded-[14px] border border-line-soft bg-raised px-[18px] pb-4 pt-[18px] text-left hover:border-accent-line"
+                className="flex min-h-[132px] cursor-pointer flex-col gap-2 rounded-[14px] border border-line-soft bg-[color-mix(in_oklch,var(--raised)_72%,transparent)] px-[18px] pb-4 pt-[18px] text-left backdrop-blur-[3px] hover:border-accent-line"
               >
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="font-serif text-[22px] leading-[1.1] text-text">{t.name}</span>

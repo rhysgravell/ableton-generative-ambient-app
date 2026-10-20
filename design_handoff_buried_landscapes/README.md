@@ -58,6 +58,18 @@ Output names: `slow_chords_{Key}_{scale}.mid`, `melody_…`, `bass_drone_…`, `
 - Settings stack (the 2-col grid is kept for half fields). The **RunBar is `position: sticky; bottom: 0`** with a fade background (`linear-gradient(to bottom, transparent, var(--bg) 30%)`).
 - The result panel follows the settings (radius 16, padding 20/18/24). Results show inline under the settings; there is no separate screen.
 
+### Animated sine-wave background (welcome screen)
+An animated `<canvas>` sits behind the welcome hero and tool cards. It is absolutely positioned at `inset:0` with `pointer-events:none`, layered after the strata lines and before the content.
+- Color token `--wave`: dark `oklch(0.56 0.09 165)`, light `oklch(0.6 0.07 172)`. Read it from computed style on every frame so theme switches apply immediately.
+- Five waves. For each wave `{a: amplitude (fraction of H), k: cycles across width, s: speed, y: centre (fraction of H), al: alpha, w: lineWidth}`:
+  `{.24,1.1,.07,.60,.6,1.6}`, `{.17,1.7,-.05,.63,.4,1.3}`, `{.30,.7,.035,.66,.32,1.1}`, `{.12,2.6,.09,.57,.26,1}`, `{.20,1.35,-.025,.70,.2,1}`
+- Per frame (`t` in seconds, `u = x/W`, step x by 4px):
+  `breathe = .75 + .25*sin(t*.18 + i*1.3)`
+  `y = H*y0 + sin(u*2π*k + t*s*2π + i)*H*a*breathe + sin(u*2π*k*2.3 - t*s*3 + i*2)*H*a*.18`
+- Scale the canvas for devicePixelRatio (capped at 2) and resize with a ResizeObserver. Under `prefers-reduced-motion: reduce`, draw one static frame and stop.
+- Tool cards on the welcome screen are now translucent so the waves show through: `background: color-mix(in oklch, var(--raised) 72%, transparent); backdrop-filter: blur(3px)`.
+- Implement it as a client component, `components/WaveBackground.tsx` (`'use client'`, with `useEffect` + `requestAnimationFrame`, cleaning up on unmount). The source is `function Waves()` in `Studio.dc.html`.
+
 ## Components (exact specs)
 - **Field label row**: label sans 500 13px `--text-2`; optional hint mono 11.5px `--text-3`, right-aligned. Gap to the control: 9px.
 - **Control box** (select, number, text): height 46, radius 11, bg `--raised`, 1px `--line`. Error state: border `--err` plus `box-shadow: 0 0 0 3px var(--err-soft)`.
@@ -118,6 +130,7 @@ In the prototype, `compute()` makes up all results: piano rolls are seeded rando
 | --err | oklch(0.78 0.11 45) | oklch(0.52 0.15 38) |
 | --err-soft | oklch(0.78 0.11 45 / .14) | oklch(0.52 0.15 38 / .1) |
 | --glow | oklch(0.55 0.06 200 / .16) | oklch(0.88 0.035 200 / .4) |
+| --wave | oklch(0.56 0.09 165) | oklch(0.6 0.07 172) |
 
 **Fonts** (Google Fonts via `next/font`): serif **Newsreader** 300/400 plus italic (titles, figures, empty states); sans **Instrument Sans** 400/500/600 (UI); mono **JetBrains Mono** 400/500 (numbers, file names, numerals, tables; always `tabular-nums`).
 **Type sizes**: 54 hero · 46 report figure · 38 tool title (30 on mobile) · 32 result title · 27/26 panel title · 22 card/wordmark · 15–14.5 body/controls · 13.5 table · 13 labels/errors · 12 meta · 10.5 mono caps (tracking .14em).
@@ -125,7 +138,7 @@ In the prototype, `compute()` makes up all results: piano rolls are seeded rando
 **Spacing**: 6 · 8 · 9 · 12 · 14 · 18 · 22 · 28 · 40. Page padding 40 on desktop, 18 on mobile.
 **Heights**: inputs 46 · run button 52 · rail item 38 · mobile rows ≥48 · touch targets ≥44.
 **Shadows**: only focus/error rings (`0 0 0 3px var(--err-soft)`) and dot halos (`0 0 0 3px var(--accent-soft)`). No drop shadows.
-**Motion**: toggles .2s; the running band 2.6s ease-in-out. Keep everything else instant so repeat use stays fast.
+**Motion**: toggles .2s; the running band 2.6s ease-in-out; the welcome-screen waves (see above). Keep everything else instant so repeat use stays fast.
 
 ## Assets
 None. There are no icons or images; glyphs are text (− + ▾ ✓ × ↓ ⌘ ↵).
