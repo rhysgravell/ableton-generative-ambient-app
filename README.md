@@ -27,6 +27,8 @@ npm run dev
 
 Open http://localhost:3000.
 
+Checks (the same ones CI runs on every PR): `npm run lint`, `npm run typecheck`, `npm test` (Vitest unit tests for `src/lib`), `npm run build`.
+
 ## Scripts
 
 | Tool | Runs | Returns |
