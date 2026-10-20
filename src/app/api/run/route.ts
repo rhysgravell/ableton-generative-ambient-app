@@ -3,9 +3,9 @@ import { mkdir, mkdtemp, readdir, readFile, rename, rm, writeFile } from "node:f
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import type { Analysis, Clip, RunError, RunResponse } from "@/lib/api-types";
+import type { Analysis, Clip, KeyChange, RunError, RunResponse } from "@/lib/api-types";
 import { fileTag, KEYS, SCALE_NAMES, scriptKey } from "@/lib/theory";
-import { isToolId, TOOL_BY_ID, TRANSFORM_ORDER, type ToolId, type TransformState, type Values } from "@/lib/tools";
+import { DETECT, isToolId, TOOL_BY_ID, TRANSFORM_ORDER, usesFile, type ToolId, type TransformState, type Values } from "@/lib/tools";
 import { isMidiName, progressionSpec, validate, type Errors, type FileInfo } from "@/lib/validate";
 
 export const runtime = "nodejs";
@@ -93,6 +93,18 @@ async function generate(workDir: string, args: string[], zipName: string, seed: 
   };
 }
 
+/** Run a script that writes outName from input, and return it with before/after piano rolls. */
+async function single(workDir: string, input: string, outName: string, args: string[], seed: number | null) {
+  const outPath = path.join(workDir, outName);
+  const stdout = await python([...args, "--output", outPath], workDir);
+  const [before, after] = JSON.parse(await helper("notes", [input, outPath], workDir)) as Clip[];
+  const data = await readFile(outPath);
+  const res = { kind: "single", name: outName, bytes: data.length, seed, before, after, data: data.toString("base64") } as const;
+  return { res, stdout };
+}
+
+const stem = (input: string) => path.basename(input).replace(/\.midi?$/i, "");
+
 async function handle(tool: ToolId, v: Values, workDir: string, inputPath: string | null): Promise<RunResponse> {
   switch (tool) {
     case "ambient": {
@@ -134,12 +146,16 @@ async function handle(tool: ToolId, v: Values, workDir: string, inputPath: strin
       }
       const seed = String(v.seed ?? "").trim() === "" ? null : parseInt(String(v.seed), 10);
       if (seed !== null) args.push("--seed", String(seed));
-      const outName = path.basename(input).replace(/\.midi?$/i, "") + "_mutated.mid";
-      const outPath = path.join(workDir, outName);
-      await python([...args, "--output", outPath], workDir);
-      const [before, after] = JSON.parse(await helper("notes", [input, outPath], workDir)) as Clip[];
-      const data = await readFile(outPath);
-      return { kind: "single", name: outName, bytes: data.length, seed, before, after, data: data.toString("base64") };
+      return (await single(workDir, input, `${stem(input)}_mutated.mid`, args, seed)).res;
+    }
+    case "rekey": {
+      const input = inputPath!;
+      const args = [script("app/change_key.py"), input, "--to-key", scriptKey(String(v.key)), "--to-scale", String(v.scale)];
+      if (v.fromKey !== DETECT) args.push("--from-key", scriptKey(String(v.fromKey)));
+      if (v.fromScale !== DETECT) args.push("--from-scale", String(v.fromScale));
+      const outName = `${stem(input)}_${fileTag(String(v.key))}_${v.scale}.mid`;
+      const { res, stdout } = await single(workDir, input, outName, args, null);
+      return { ...res, keyChange: JSON.parse(stdout) as KeyChange };
     }
     case "analyze": {
       const analysis = JSON.parse(await helper("analyze", [inputPath!], workDir)) as Analysis;
@@ -164,7 +180,7 @@ export async function POST(request: Request) {
 
   const upload = form.get("file");
   const file = upload instanceof File ? upload : null;
-  const needsFile = tool === "mutate" || tool === "analyze";
+  const needsFile = usesFile(tool);
   let info: FileInfo | null = null;
   let bytes: Buffer | null = null;
   if (needsFile && file) {
@@ -177,6 +193,10 @@ export async function POST(request: Request) {
   const errors = validate(tool, v, info);
   if ("key" in v && !KEYS.includes(v.key as never)) errors.key = "Pick a key from the list.";
   if ("scale" in v && !SCALE_NAMES.includes(v.scale as never)) errors.scale = "Pick a scale from the list.";
+  if ("fromKey" in v && v.fromKey !== DETECT && !KEYS.includes(v.fromKey as never)) errors.fromKey = "Pick a key from the list.";
+  if ("fromScale" in v && v.fromScale !== DETECT && !SCALE_NAMES.includes(v.fromScale as never)) {
+    errors.fromScale = "Pick a scale from the list.";
+  }
   if (Object.keys(errors).length) return fail(errors);
 
   const workDir = await mkdtemp(path.join(os.tmpdir(), "bl-"));

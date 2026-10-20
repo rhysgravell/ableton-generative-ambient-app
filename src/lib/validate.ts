@@ -1,7 +1,7 @@
 // Validation shared by the client (live + on Run) and the API route.
 
 import { PRESETS, parseProg, SCALES, type PresetId, type Scale } from "./theory";
-import { TOOL_BY_ID, type ToolId, type TransformState, type Values } from "./tools";
+import { DETECT, TOOL_BY_ID, usesFile, type ToolId, type TransformState, type Values } from "./tools";
 
 export type FileInfo = { name: string; bad: boolean };
 export type Errors = Record<string, string>;
@@ -54,7 +54,10 @@ export function liveErrors(tool: ToolId, v: Values, file: FileInfo | null): Erro
     if (pe) e.progression = pe;
     if (!e.bpc && !e.bars && Number(v.bpc) > Number(v.bars)) e.bpc = `Longer than the whole piece (${v.bars} bars).`;
   }
-  if ((tool === "mutate" || tool === "analyze") && file?.bad) e.file = badFileMessage(file.name);
+  if (tool === "rekey" && v.fromKey === v.key && v.fromScale === v.scale && v.fromKey !== DETECT) {
+    e.key = `The file is already in ${v.key} ${v.scale}. Pick a different key or scale to move to.`;
+  }
+  if (usesFile(tool) && file?.bad) e.file = badFileMessage(file.name);
   return e;
 }
 
@@ -63,7 +66,7 @@ export function validate(tool: ToolId, v: Values, file: FileInfo | null): Errors
   const e = liveErrors(tool, v, file);
   if (tool === "ambient" && !(v.parts as string[]).length) e.parts = "Pick at least one part to generate.";
   if (tool === "drums" && !(v.patterns as string[]).length) e.patterns = "Pick at least one pattern.";
-  if ((tool === "mutate" || tool === "analyze") && !file) e.file = "Add a MIDI file first.";
+  if (usesFile(tool) && !file) e.file = "Add a MIDI file first.";
   if (tool === "mutate" && !Object.values(v.tf as TransformState).some((t) => t.on)) {
     e.tf = "Turn on at least one transform. They stack, so any combination works.";
   }

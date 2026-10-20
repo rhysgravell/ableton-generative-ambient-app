@@ -34,7 +34,7 @@ export function SingleResult({ single }: { single: Single }) {
         </span>
         <span className="flex items-center gap-[7px]">
           <span className="h-1.5 w-3.5 rounded-[2px] bg-accent" />
-          mutated
+          {single.label}
         </span>
       </div>
     </div>
