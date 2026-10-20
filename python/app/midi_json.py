@@ -4,6 +4,7 @@ JSON views of MIDI files for the web app (not part of the copied scripts).
 
   midi_json.py notes FILE...   → [{name, totalBeats, notes: [[start, dur, pitch, vel], ...]}, ...]
   midi_json.py analyze FILE    → stats + best-fit keys for the Analyze report
+  midi_json.py merge IN OUT    → IN with every track merged into one (type 0)
 
 Times are in beats. Key detection reuses analyze_midi.py's scales and scoring.
 """
@@ -102,12 +103,23 @@ def analyze_view(path):
     }
 
 
+def merge(src, dst):
+    """Flatten a multi-track file: mutate_midi.py only reads one track, often just the tempo map."""
+    mid = mido.MidiFile(src)
+    out = mido.MidiFile(type=0, ticks_per_beat=mid.ticks_per_beat)
+    out.tracks.append(mido.merge_tracks(mid.tracks))
+    out.save(dst)
+
+
 if __name__ == "__main__":
     cmd, files = sys.argv[1], sys.argv[2:]
     if cmd == "notes":
         out = [notes_view(f) for f in files]
     elif cmd == "analyze":
         out = analyze_view(files[0])
+    elif cmd == "merge":
+        merge(*files)
+        sys.exit()
     else:
         sys.exit(f"unknown command: {cmd}")
     json.dump(out, sys.stdout)
