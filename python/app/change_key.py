@@ -7,7 +7,8 @@ Move a MIDI file into another key for the web app (not part of the copied script
 Each note keeps its scale degree: the 3rd of the old key becomes the 3rd of the new one, so
 C major → G minor turns E into B♭. With the same scale on both sides that's a plain transpose.
 The root moves by the smaller interval (C → G is down 5, not up 7). Notes outside the source
-scale keep their offset from the degree below. Channel 10 (drums) is left alone.
+scale keep their offset from the degree below, without reaching the next one. Notes pushed past
+the MIDI range move back an octave. Channel 10 (drums) is left alone.
 
 Leave --from-key / --from-scale off to detect them from the notes. Prints the keys used as JSON.
 """
@@ -57,16 +58,33 @@ def mapper(src_key, src_scale, dst_key, dst_scale):
     # A pentatonic target is reached through its parent minor scale, then snapped onto its five notes.
     dst_iv = SCALES["minor"] if pent_dst else SCALES[dst_scale]
 
-    def move(note):
-        octave, pc = divmod(note - src_root, 12)
-        degree = max(i for i, iv in enumerate(src_iv) if iv <= pc)
-        chroma = pc - src_iv[degree]
+    def target(degree):
+        """Offset from the new root for a source scale degree; one past the top is the octave."""
+        if degree == len(src_iv):
+            return 12
         if pent_src:
             degree = PENTATONIC_DEGREES[degree]
         offset = dst_iv[degree]
         if pent_dst:
             offset = min(SCALES[dst_scale], key=lambda iv: abs(iv - offset))
-        return max(0, min(127, src_root + shift + octave * 12 + offset + chroma))
+        return offset
+
+    def move(note):
+        octave, pc = divmod(note - src_root, 12)
+        degree = max(i for i, iv in enumerate(src_iv) if iv <= pc)
+        chroma = pc - src_iv[degree]
+        offset = target(degree)
+        if chroma:
+            # Stay below the next scale note: if the new scale already raises this degree (C minor's
+            # B natural going to C major), the note settles on it rather than doubling the one above.
+            offset = max(offset, min(offset + chroma, target(degree + 1) - 1))
+        moved = src_root + shift + octave * 12 + offset
+        # Fold out-of-range notes back by octaves; clamping would stack them on one pitch.
+        while moved > 127:
+            moved -= 12
+        while moved < 0:
+            moved += 12
+        return moved
 
     return move, shift
 
@@ -88,6 +106,8 @@ def main():
 
     detected = args.from_key is None or args.from_scale is None
     src = detect(notes, args.from_key, args.from_scale)
+    if (src["key"], src["scale"]) == (args.to_key, args.to_scale):
+        sys.exit(f"The file already looks like {src['key']} {src['scale']}. Pick a different key or scale to move to.")
     move, shift = mapper(src["key"], src["scale"], args.to_key, args.to_scale)
 
     for track in mid.tracks:
