@@ -138,7 +138,9 @@ async function handle(tool: ToolId, v: Values, workDir: string, inputPath: strin
     case "mutate": {
       const input = inputPath!;
       const tf = v.tf as TransformState;
-      const args = [script("midi/mutate_midi.py"), input];
+      const merged = path.join(workDir, "merged.mid");
+      await helper("merge", [input, merged], workDir);
+      const args = [script("midi/mutate_midi.py"), merged];
       for (const id of TRANSFORM_ORDER) {
         if (!tf[id]?.on) continue;
         if (id === "reverse") args.push(TRANSFORM_FLAGS[id]);
