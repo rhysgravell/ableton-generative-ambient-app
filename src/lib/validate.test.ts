@@ -26,6 +26,12 @@ describe("liveErrors", () => {
     expect(liveErrors("ambient", ambient({ bars: "" }), null).bars).toBe("Use a value from 1 to 256.");
   });
 
+  it("wants whole numbers for run tools, but lets BPM sync take decimals", () => {
+    expect(liveErrors("ambient", ambient({ bars: "1.5" }), null).bars).toBe("Use a whole number from 1 to 256.");
+    expect(liveErrors("drums", { ...cloneDefaults("drums"), bpm: 80.5 }, null).bpm).toBe("Use a whole number from 20 to 300.");
+    expect(liveErrors("bpmsync", { bpm: "120.5" }, null)).toEqual({});
+  });
+
   it("wants whole-number seeds, or none", () => {
     expect(liveErrors("ambient", ambient({ seed: "4127" }), null).seed).toBeUndefined();
     expect(liveErrors("ambient", ambient({ seed: "4.5" }), null).seed).toMatch(/whole numbers/);
