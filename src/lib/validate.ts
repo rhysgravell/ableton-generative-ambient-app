@@ -38,12 +38,16 @@ function progressionError(v: Values): string | null {
 /** Errors shown as you type. */
 export function liveErrors(tool: ToolId, v: Values, file: FileInfo | null): Errors {
   const e: Errors = {};
+  // Run tools pass numbers to scripts that only take whole ones; the live reference tools can use decimals.
+  const whole = !TOOL_BY_ID[tool].live;
   for (const f of TOOL_BY_ID[tool].fields) {
     if (f.type !== "number") continue;
     const raw = v[f.id];
     const n = Number(raw);
     if (raw === "" || raw === null || Number.isNaN(n) || n < f.min || n > f.max) {
       e[f.id] = `Use a value from ${f.min} to ${f.max}.`;
+    } else if (whole && !Number.isInteger(n)) {
+      e[f.id] = `Use a whole number from ${f.min} to ${f.max}.`;
     }
   }
   if ("seed" in v && v.seed !== "" && !/^\d+$/.test(String(v.seed).trim())) {
