@@ -36,6 +36,7 @@ Checks (the same ones CI runs on every PR): `npm run lint`, `npm run typecheck`,
 | Ambient generator | `midi/generate_ambient_midi.py` | Zip of chord / melody / bass / arp clips |
 | Drum generator | `midi/generate_drums.py` | Zip of sparse / four-on-the-floor clips |
 | Mutate | `midi/mutate_midi.py` | New `<name>_mutated.mid` |
+| Change key | `app/change_key.py` | New `<name>_<key>_<scale>.mid` |
 | Analyze | `analyze_midi.py`'s key detection via `app/midi_json.py` | Report |
 | BPM sync | in the browser | Tables |
 | Scale explorer | in the browser | Tables |
