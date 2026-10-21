@@ -4,9 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import type { Analysis, Clip, KeyChange, RunError, RunResponse } from "@/lib/api-types";
-import { fileTag, KEYS, SCALE_NAMES, scriptKey } from "@/lib/theory";
+import { fileTag, scriptKey } from "@/lib/theory";
 import { DETECT, isToolId, TOOL_BY_ID, TRANSFORM_ORDER, usesFile, type ToolId, type TransformState, type Values } from "@/lib/tools";
-import { isMidiName, progressionSpec, validate, type Errors, type FileInfo } from "@/lib/validate";
+import { isMidiName, progressionSpec, requestErrors, validate, type Errors, type FileInfo } from "@/lib/validate";
 
 export const runtime = "nodejs";
 
@@ -169,7 +169,12 @@ async function handle(tool: ToolId, v: Values, workDir: string, inputPath: strin
 }
 
 export async function POST(request: Request) {
-  const form = await request.formData();
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return fail({ script: "The request couldn't be read." });
+  }
   const tool = String(form.get("tool") ?? "");
   if (!isToolId(tool) || TOOL_BY_ID[tool].live) return fail({ script: "Unknown tool." });
 
@@ -179,6 +184,10 @@ export async function POST(request: Request) {
   } catch {
     return fail({ script: "Settings couldn't be read." });
   }
+
+  // A hand-made request can carry values the UI never sends; validate() assumes the UI's shapes.
+  const shape = requestErrors(tool, v);
+  if (Object.keys(shape).length) return fail(shape);
 
   const upload = form.get("file");
   const file = upload instanceof File ? upload : null;
@@ -193,12 +202,6 @@ export async function POST(request: Request) {
   }
 
   const errors = validate(tool, v, info);
-  if ("key" in v && !KEYS.includes(v.key as never)) errors.key = "Pick a key from the list.";
-  if ("scale" in v && !SCALE_NAMES.includes(v.scale as never)) errors.scale = "Pick a scale from the list.";
-  if ("fromKey" in v && v.fromKey !== DETECT && !KEYS.includes(v.fromKey as never)) errors.fromKey = "Pick a key from the list.";
-  if ("fromScale" in v && v.fromScale !== DETECT && !SCALE_NAMES.includes(v.fromScale as never)) {
-    errors.fromScale = "Pick a scale from the list.";
-  }
   if (Object.keys(errors).length) return fail(errors);
 
   const workDir = await mkdtemp(path.join(os.tmpdir(), "bl-"));

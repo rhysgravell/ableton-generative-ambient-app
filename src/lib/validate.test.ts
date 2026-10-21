@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cloneDefaults, type TransformState, type Values } from "./tools";
-import { badFileMessage, isMidiName, liveErrors, progressionSpec, validate } from "./validate";
+import { badFileMessage, isMidiName, liveErrors, progressionSpec, requestErrors, validate } from "./validate";
 
 const ambient = (patch: Values = {}) => ({ ...cloneDefaults("ambient"), ...patch });
 const midi = { name: "loop.mid", bad: false };
@@ -87,5 +87,28 @@ describe("file names", () => {
   it("tells audio apart from other files", () => {
     expect(badFileMessage("take.flac")).toMatch(/is audio/);
     expect(badFileMessage("notes.txt")).toBe("“notes.txt” isn't a MIDI file. Drop a .mid or .midi file.");
+  });
+});
+
+describe("requestErrors", () => {
+  it("passes every run tool's defaults", () => {
+    for (const id of ["ambient", "drums", "mutate", "rekey", "analyze"] as const) {
+      expect(requestErrors(id, cloneDefaults(id))).toEqual({});
+    }
+  });
+
+  it("rejects selects and multis outside their options", () => {
+    expect(requestErrors("ambient", ambient({ scale: "blues" })).scale).toBe("Pick from the list.");
+    expect(requestErrors("rekey", { ...cloneDefaults("rekey"), fromKey: "H" }).fromKey).toBe("Pick from the list.");
+    expect(requestErrors("ambient", ambient({ parts: "chords" })).parts).toBeDefined();
+    expect(requestErrors("drums", { ...cloneDefaults("drums"), patterns: ["sparse", "jungle"] }).patterns).toBeDefined();
+  });
+
+  it("rejects malformed progressions and transforms", () => {
+    expect(requestErrors("ambient", ambient({ progMode: "chaos" })).progression).toBeDefined();
+    const tf = cloneDefaults("mutate").tf as TransformState;
+    expect(requestErrors("mutate", { tf: { ...tf, stretch: { on: true, v: 0 } } }).tf).toBeDefined();
+    expect(requestErrors("mutate", { tf: { transpose: { on: true, v: 2 } } }).tf).toBeDefined();
+    expect(requestErrors("mutate", { tf: null }).tf).toBeDefined();
   });
 });

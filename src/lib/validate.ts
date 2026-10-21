@@ -1,7 +1,7 @@
 // Validation shared by the client (live + on Run) and the API route.
 
 import { PRESETS, parseProg, SCALES, type PresetId, type Scale } from "./theory";
-import { DETECT, TOOL_BY_ID, usesFile, type ToolId, type TransformState, type Values } from "./tools";
+import { DETECT, TOOL_BY_ID, TRANSFORMS, usesFile, type Option, type ToolId, type TransformState, type Values } from "./tools";
 
 export type FileInfo = { name: string; bad: boolean };
 export type Errors = Record<string, string>;
@@ -69,6 +69,33 @@ export function validate(tool: ToolId, v: Values, file: FileInfo | null): Errors
   if (usesFile(tool) && !file) e.file = "Add a MIDI file first.";
   if (tool === "mutate" && !Object.values(v.tf as TransformState).some((t) => t.on)) {
     e.tf = "Turn on at least one transform. They stack, so any combination works.";
+  }
+  return e;
+}
+
+const PROG_MODES = ["preset", "numerals", "random"];
+const listed = (opts: Option[], x: unknown) => opts.some((o) => o.v === x);
+
+function transformsOk(tf: unknown) {
+  if (typeof tf !== "object" || tf === null) return false;
+  return TRANSFORMS.every((t) => {
+    const s = (tf as Partial<TransformState>)[t.id];
+    return typeof s?.on === "boolean" && typeof s.v === "number" && (t.kind === "none" || (s.v >= t.min && s.v <= t.max));
+  });
+}
+
+/** Shape checks for values that arrive over HTTP, which the UI can't produce. Run before validate(), which trusts the shape. */
+export function requestErrors(tool: ToolId, v: Values): Errors {
+  const e: Errors = {};
+  for (const f of TOOL_BY_ID[tool].fields) {
+    const x = v[f.id];
+    if (f.type === "select" && !listed(f.opts, x)) e[f.id] = "Pick from the list.";
+    if (f.type === "multi" && !(Array.isArray(x) && x.every((y) => listed(f.opts, y)))) e[f.id] = "Pick from the listed options.";
+    if (f.type === "transforms" && !transformsOk(x)) e[f.id] = "Transform settings are missing or out of range.";
+    if (f.type === "progression") {
+      const ok = PROG_MODES.includes(v.progMode as string) && PRESETS.some((p) => p.id === v.preset) && typeof v.progText === "string";
+      if (!ok) e[f.id] = "Pick a preset, type numerals or choose random.";
+    }
   }
   return e;
 }
