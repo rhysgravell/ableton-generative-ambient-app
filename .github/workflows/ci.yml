@@ -36,5 +36,7 @@ jobs:
 
       - name: Python scripts compile
         run: python -m compileall -q python
+      - name: Python unit tests
+        run: python -m unittest discover -s python/tests
       - name: MIDI helper smoke test
         run: python python/app/midi_json.py analyze public/samples/night_pads_v2.mid
